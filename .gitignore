@@ -1,4 +1,16 @@
-MIT_split/
+#######################
+### PROJECT RELATED ###
+#######################
+
+# JetBrains IDE
+.idea/
+
+# Dataset (images)
+dataset/MIT_split/
+
+######################
+### PYTHON RELATED ###
+######################
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -89,3 +101,5 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+mlcv/
