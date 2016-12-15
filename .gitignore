@@ -8,6 +8,11 @@
 # Dataset (images)
 dataset/MIT_split/
 
+
+# SVMs
+*.pickle
+!models/*.pickle
+
 ######################
 ### PYTHON RELATED ###
 ######################
