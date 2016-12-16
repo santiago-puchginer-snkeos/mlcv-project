@@ -56,12 +56,12 @@ for i in range(1, len(Train_descriptors)):
 stdSlr = StandardScaler().fit(D)
 D_scaled = stdSlr.transform(D)
 print 'Training the SVM classifier...'
-# clf = svm.SVC(kernel='linear', C=1)
-# clf.fit(D_scaled, L)
-# with open('SVMdef_ORB.pickle', 'w') as f:
-#     cPickle.dump(clf, f)
-with open('SVMdef_ORB.pickle', 'r') as f:
-    clf = cPickle.load(f)
+clf = svm.SVC(kernel='linear', C=1)
+clf.fit(D_scaled, L)
+with open('SVMdef_ORB_WTK4.pickle', 'w') as f:
+    cPickle.dump(clf, f)
+#with open('SVMdef_ORB.pickle', 'r') as f:
+#    clf = cPickle.load(f)
 print 'Done!'
 
 # get all the test data and predict their labels
