@@ -49,7 +49,7 @@ for i in range(1, len(Train_descriptors)):
     D = np.vstack((D, Train_descriptors[i]))
     L = np.hstack((L, np.array([Train_label_per_descriptor[i]] * Train_descriptors[i].shape[0])))
 
-for N in range(1,101):
+for N in range(23,101):
     # Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
     print 'PCA number of components: ' + str(N)
 
@@ -59,15 +59,27 @@ for N in range(1,101):
     #Transform the training data
     D_pca = pca.transform(D)
 
+    file = open('pca23.pickle', 'wb')
+    cPickle.dump(pca, file)
+    file.close()
+
     #Create an scaler
     stdSlr = StandardScaler().fit(D_pca)
     #Scale training data
     D_scaled = stdSlr.transform(D_pca)
 
+    file = open('scaler23.pickle', 'wb')
+    cPickle.dump(stdSlr, file)
+    file.close()
+
     print 'Training the SVM classifier...'
     clf = svm.SVC(kernel='linear', C=1)
     clf.fit(D_scaled, L)
     print 'Done!'
+
+    file = open('SVM23linear.pickle', 'wb')
+    cPickle.dump(clf, file)
+    file.close()
 
     # get all the test data and predict their labels
     start = time.time()

@@ -6,142 +6,150 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-results=[]
-file = open('../ResultsSVM_poly.pickle', 'r')
 
-results=cPickle.load(file)
+def plotSVMparam(filename): #filename='../ResultsSVM_poly.pickle'
+    results=[]
+    file = open(filename, 'r')
 
-print(results)
-#plt.plot(results[0],results[2])
+    results=cPickle.load(file)
 
-#X, Y = np.meshgrid(results[0],results[1])
+    print(results)
+    #plt.plot(results[0],results[2])
 
-fig = plt.figure()
+    #X, Y = np.meshgrid(results[0],results[1])
 
-fig.suptitle('Polynomial', fontsize=14, fontweight='bold')
-ax = fig.add_subplot(111, projection='3d')
-#ax.plot_surface(X,Y,results[2], cmap=plt.cm.jet, cstride=1, rstride=1)
-ax.scatter(results[0],results[1], results[2], c='r', marker='o')
+    fig = plt.figure()
 
-ax.set_xlabel('d')
-ax.set_ylabel('r')
-ax.set_zlabel('Accuracy')
+    fig.suptitle('Polynomial', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot(111, projection='3d')
+    #ax.plot_surface(X,Y,results[2], cmap=plt.cm.jet, cstride=1, rstride=1)
+    ax.scatter(results[0],results[1], results[2], c='r', marker='o')
 
-plt.show()
-D=results[0]
-G=results[1]
-A=results[2]
-ind=np.argmax(results[2])
-print('POLY: Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
+    ax.set_xlabel('d')
+    ax.set_ylabel('r')
+    ax.set_zlabel('Accuracy')
 
-file = open('../ResultsSVM_rbf.pickle', 'r')
+    plt.show()
+    D=results[0]
+    G=results[1]
+    A=results[2]
+    ind=np.argmax(results[2])
+    print('POLY: Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
 
-results=cPickle.load(file)
+    file = open('../ResultsSVM_rbf.pickle', 'r')
 
-print(results)
+    results=cPickle.load(file)
 
-fig = plt.figure()
-fig.suptitle('RBF', fontsize=14, fontweight='bold')
+    print(results)
 
-ax = fig.add_subplot(111)
+    fig = plt.figure()
+    fig.suptitle('RBF', fontsize=14, fontweight='bold')
 
-ax.set_xlabel('Gamma')
-ax.set_ylabel('Accuracy')
+    ax = fig.add_subplot(111)
 
-ax.plot(results[0],results[2])
+    ax.set_xlabel('Gamma')
+    ax.set_ylabel('Accuracy')
 
-#X, Y = np.meshgrid(results[0],results[1])
-plt.show()
-D=results[0]
-G=results[0]
-A=results[2]
-ind=np.argmax(results[2])
-#print('Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
-print('RBF: Best parameters are: Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
+    ax.plot(results[0],results[2])
 
-file = open('../ResultsSVM_sigmoid.pickle', 'r')
+    #X, Y = np.meshgrid(results[0],results[1])
+    plt.show()
+    D=results[0]
+    G=results[0]
+    A=results[2]
+    ind=np.argmax(results[2])
+    #print('Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
+    print('RBF: Best parameters are: Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
 
-results=cPickle.load(file)
+    file = open('../ResultsSVM_sigmoid.pickle', 'r')
 
-print(results)
-fig = plt.figure()
-fig.suptitle('Sigmoid', fontsize=14, fontweight='bold')
+    results=cPickle.load(file)
 
-ax = fig.add_subplot(111)
+    print(results)
+    fig = plt.figure()
+    fig.suptitle('Sigmoid', fontsize=14, fontweight='bold')
 
-ax.set_xlabel('R')
-ax.set_ylabel('Accuracy')
-ax.plot(results[0],results[2])
+    ax = fig.add_subplot(111)
 
-#X, Y = np.meshgrid(results[0],results[1])
+    ax.set_xlabel('R')
+    ax.set_ylabel('Accuracy')
+    ax.plot(results[0],results[2])
 
-plt.show()
-D=results[0]
-G=results[0]
-A=results[2]
-ind=np.argmax(results[2])
-#print('Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
-print('Sigmoid: Best parameters are: R '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
+    #X, Y = np.meshgrid(results[0],results[1])
+
+    plt.show()
+    D=results[0]
+    G=results[0]
+    A=results[2]
+    ind=np.argmax(results[2])
+    #print('Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
+    print('Sigmoid: Best parameters are: R '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
 
 
 
-##### Cost sweep
-file = open('../ResultsSVM_poly_cost.pickle', 'r')
+    ##### Cost sweep
+    file = open('../ResultsSVM_poly_cost.pickle', 'r')
 
-results=cPickle.load(file)
+    results=cPickle.load(file)
 
-print(results)
-fig = plt.figure()
-fig.suptitle('Polynomial', fontsize=14, fontweight='bold')
+    print(results)
+    fig = plt.figure()
+    fig.suptitle('Polynomial', fontsize=14, fontweight='bold')
 
-ax = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
 
-ax.set_xlabel('Cost')
-ax.set_ylabel('Accuracy')
-ax.plot(results[0],results[1])
+    ax.set_xlabel('Cost')
+    ax.set_ylabel('Accuracy')
+    ax.plot(results[0],results[1])
 
-plt.show()
-C=results[0]
-A=results[1]
-ind=np.argmax(results[1])
-print('Poly-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
+    plt.show()
+    C=results[0]
+    A=results[1]
+    ind=np.argmax(results[1])
+    print('Poly-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
 
-file = open('../ResultsSVM_rbf_cost.pickle', 'r')
+    file = open('../ResultsSVM_rbf_cost.pickle', 'r')
 
-results=cPickle.load(file)
+    results=cPickle.load(file)
 
-print(results)
-fig = plt.figure()
-fig.suptitle('RBF', fontsize=14, fontweight='bold')
+    print(results)
+    fig = plt.figure()
+    fig.suptitle('RBF', fontsize=14, fontweight='bold')
 
-ax = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
 
-ax.set_xlabel('Cost')
-ax.set_ylabel('Accuracy')
-ax.plot(results[0],results[1])
+    ax.set_xlabel('Cost')
+    ax.set_ylabel('Accuracy')
+    ax.plot(results[0],results[1])
 
-plt.show()
-C=results[0]
-A=results[1]
-ind=np.argmax(results[1])
-print('Rbf-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
+    plt.show()
+    C=results[0]
+    A=results[1]
+    ind=np.argmax(results[1])
+    print('Rbf-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
 
-file = open('../ResultsSVM_sigmoid_cost.pickle', 'r')
+    file = open('../ResultsSVM_sigmoid_cost.pickle', 'r')
 
-results=cPickle.load(file)
+    results=cPickle.load(file)
 
-print(results)
-fig = plt.figure()
-fig.suptitle('Sigmoid', fontsize=14, fontweight='bold')
+    print(results)
+    fig = plt.figure()
+    fig.suptitle('Sigmoid', fontsize=14, fontweight='bold')
 
-ax = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
 
-ax.set_xlabel('Cost')
-ax.set_ylabel('Accuracy')
-ax.plot(results[0],results[1])
+    ax.set_xlabel('Cost')
+    ax.set_ylabel('Accuracy')
+    ax.plot(results[0],results[1])
 
-plt.show()
-C=results[0]
-A=results[1]
-ind=np.argmax(results[1])
-print('Sigmoid-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
+    plt.show()
+    C=results[0]
+    A=results[1]
+    ind=np.argmax(results[1])
+    print('Sigmoid-cost : Best parameters are: C '+str(C[ind])+ ' with Accuracy '+str(A[ind]))
+
+
+
+def plotConfusionMatrix(confMatrix, classes, normalize):
+
+    print 'hello Im still not implemented'
