@@ -7,9 +7,9 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
-def plotSVMparam(filename): #filename='../ResultsSVM_poly.pickle'
+def plotSVMparam(): #filename='../ResultsSVM_poly.pickle'
     results=[]
-    file = open(filename, 'r')
+    file = open('../ResultsSVM_poly.pickle', 'r')
 
     results=cPickle.load(file)
 
@@ -36,7 +36,7 @@ def plotSVMparam(filename): #filename='../ResultsSVM_poly.pickle'
     ind=np.argmax(results[2])
     print('POLY: Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
 
-    file = open('../ResultsSVM_rbf.pickle', 'r')
+    file = open('../ResultsSVM_rbf_2nd.pickle', 'r')
 
     results=cPickle.load(file)
 
@@ -153,3 +153,6 @@ def plotSVMparam(filename): #filename='../ResultsSVM_poly.pickle'
 def plotConfusionMatrix(confMatrix, classes, normalize):
 
     print 'hello Im still not implemented'
+
+
+plotSVMparam()

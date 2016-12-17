@@ -64,7 +64,7 @@ D_scaled = stdSlr.transform(D_pca)
 for c in range(1, 10):
     # Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
     print('For value c: ' + str(c))
-    clf = svm.SVC(kernel='rbf', C=c, gamma=1)
+    clf = svm.SVC(kernel='rbf', C=c, gamma=0.1)
     clf.fit(D_scaled, L)
 
     # get all the test data and predict their labels
@@ -94,7 +94,7 @@ for c in range(1, 10):
 
 # Save the results
 results = [Cost, Accuracy, Time]
-file = open('ResultsSVM_rbf_cost.pickle', 'wb')
+file = open('ResultsSVM_rbf_cost_2nd.pickle', 'wb')
 cPickle.dump(results, file)
 file.close()
 
