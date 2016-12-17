@@ -26,15 +26,13 @@ print train_images_filenames[1]
 # read the just 30 train images per class
 # extract SIFT keypoints and descriptors
 # store descriptors in a python list of numpy arrays
-
+final_accuracy = []
 Train_descriptors = []
 Train_label_per_descriptor = []
-final_accuracy=[]
-for sigma1 in range(10, 30, 1):
-    sigma = float(sigma1)/10
-    for ct1 in range(1, 9):
-        ct = float(ct1)/100
-        for et in range(28, 88, 10):
+
+for levels in range(4, 15):
+    for et in range(28, 88, 10):
+        for wtak in range(2, 5):
             for i in range(len(train_images_filenames)):
                 filename = train_images_filenames[i]
                 filename = "../." + filename
@@ -43,16 +41,15 @@ for sigma1 in range(10, 30, 1):
                     ima = cv2.imread(filename)
                     gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
                     ##kpt, des = SIFT_detector.detectAndCompute(gray, None)
-                    kpt, des = feature_extraction.SURF(gray, sigma, ct, et)
+                    kpt, des = feature_extraction.ORB(gray, levels, et, wtak)
                     Train_descriptors.append(des)
                     Train_label_per_descriptor.append(train_labels[i])
                     print str(len(kpt)) + ' extracted keypoints and descriptors'
 
-            # Transform everything to numpy arrays
+# Transform everything to numpy arrays
 
             D = Train_descriptors[0]
             L = np.array([Train_label_per_descriptor[0]] * Train_descriptors[0].shape[0])
-
             for i in range(1, len(Train_descriptors)):
                 D = np.vstack((D, Train_descriptors[i]))
                 L = np.hstack((L, np.array([Train_label_per_descriptor[i]] * Train_descriptors[i].shape[0])))
@@ -70,9 +67,9 @@ for sigma1 in range(10, 30, 1):
             print 'Training the SVM classifier...'
             clf = svm.SVC(kernel='linear', C=1)
             clf.fit(D_scaled, L)
-            with open('SVMdef_SURF_sigma'+str(sigma)+'_cT'+str(ct)+'_eT'+str(et)+'.pickle', 'w') as f:
+            with open('SVMdef_ORB_nlevels'+str(levels)+'_wtak'+str(wtak)+'_eT'+str(et)+'.pickle', 'w') as f:
                 cPickle.dump(clf, f)
-            #with open('SVMdef_SURF.pickle', 'r') as f:
+            #with open('SVMdef_SIFT.pickle', 'r') as f:
             #    clf = cPickle.load(f)
             print 'Done!'
 
@@ -85,22 +82,27 @@ for sigma1 in range(10, 30, 1):
                 filename = "../."+filename
                 ima = cv2.imread(filename)
                 gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-                kpt, des = feature_extraction.SURF(gray)
+                kpt, des = feature_extraction.ORB(gray, levels, et, wtak)
                 des_pca = pca.transform(des)
                 predictions = clf.predict(stdSlr.transform(des_pca))
                 values, counts = np.unique(predictions, return_counts=True)
                 predictedclass = values[np.argmax(counts)]
+                with open('predictedclass_SVMdef_ORB_nlevels' + str(levels) + '_wtak' + str(wtak) + '_eT' + str(et) + '.pickle',
+                          'w') as f1:
+                    cPickle.dump(predictedclass, f1)
                 print 'image ' + filename + ' was from class ' + test_labels[i] + ' and was predicted ' + predictedclass
                 num_test_images += 1
                 if predictedclass == test_labels[i]:
                     num_correct += 1
-
-            print 'Final accuracy: ' + str(num_correct * 100.0 / num_test_images)
             accuracy = (num_correct * 100.0 / num_test_images)
+            with open('accuracy_SVMdef_ORB_nlevels' + str(levels) + '_wtak' + str(wtak) + '_eT' + str(et) + '.pickle',
+                      'w') as f2:
+                cPickle.dump(accuracy, f2)
+            print 'Final accuracy: ' + str(num_correct * 100.0 / num_test_images)
+
             end = time.time()
             print 'Done in ' + str(end - start) + ' secs.'
 
-            # 38.78% in 797 secs.
-final_accuracy=np.append(final_accuracy, accuracy)
-with open('global_accuracy_SURF.pickle', 'w') as f:
-    cPickle.dump(final_accuracy, f)
+final_accuracy = np.append(final_accuracy, accuracy)
+with open('global_accuracy_ORB.pickle', 'w') as f3:
+    cPickle.dump(final_accuracy, f3)

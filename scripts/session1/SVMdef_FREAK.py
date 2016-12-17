@@ -43,7 +43,7 @@ for sigma1 in range(10, 30, 1):
                     ima = cv2.imread(filename)
                     gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
                     ##kpt, des = SIFT_detector.detectAndCompute(gray, None)
-                    kpt, des = feature_extraction.SURF(gray, sigma, ct, et)
+                    kpt, des = feature_extraction.FREAK(gray, sigma, ct, et)
                     Train_descriptors.append(des)
                     Train_label_per_descriptor.append(train_labels[i])
                     print str(len(kpt)) + ' extracted keypoints and descriptors'
@@ -70,7 +70,7 @@ for sigma1 in range(10, 30, 1):
             print 'Training the SVM classifier...'
             clf = svm.SVC(kernel='linear', C=1)
             clf.fit(D_scaled, L)
-            with open('SVMdef_SURF_sigma'+str(sigma)+'_cT'+str(ct)+'_eT'+str(et)+'.pickle', 'w') as f:
+            with open('SVMdef_FREAK_sigma'+str(sigma)+'_cT'+str(ct)+'_eT'+str(et)+'.pickle', 'w') as f:
                 cPickle.dump(clf, f)
             #with open('SVMdef_SURF.pickle', 'r') as f:
             #    clf = cPickle.load(f)
@@ -85,7 +85,7 @@ for sigma1 in range(10, 30, 1):
                 filename = "../."+filename
                 ima = cv2.imread(filename)
                 gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-                kpt, des = feature_extraction.SURF(gray)
+                kpt, des = feature_extraction.FREAK(gray, sigma, ct, et)
                 des_pca = pca.transform(des)
                 predictions = clf.predict(stdSlr.transform(des_pca))
                 values, counts = np.unique(predictions, return_counts=True)
@@ -94,13 +94,21 @@ for sigma1 in range(10, 30, 1):
                 num_test_images += 1
                 if predictedclass == test_labels[i]:
                     num_correct += 1
+            accuracy = num_correct * 100.0 / num_test_images
+            with open('accuracy_SVMdef_FREAK_sigma' + str(sigma) + '_cT' + str(ct) + '_eT' + str(et) + '.pickle',
+                      'w') as f:
+                cPickle.dump(accuracy, f)
+
 
             print 'Final accuracy: ' + str(num_correct * 100.0 / num_test_images)
-            accuracy = (num_correct * 100.0 / num_test_images)
+
             end = time.time()
             print 'Done in ' + str(end - start) + ' secs.'
 
             # 38.78% in 797 secs.
-final_accuracy=np.append(final_accuracy, accuracy)
-with open('global_accuracy_SURF.pickle', 'w') as f:
+            tme = end - start
+            with open('timeSIFT_sigma' + str(sigma) + '_cT' + str(ct) + '_eT' + str(et) + '.pickle', 'w') as f:
+                cPickle.dump(tme, f)
+final_accuracy = np.append(final_accuracy, accuracy)
+with open('global_accuracy_FREAK.pickle', 'w') as f:
     cPickle.dump(final_accuracy, f)
