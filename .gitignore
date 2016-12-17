@@ -8,8 +8,7 @@
 # Dataset (images)
 dataset/MIT_split/
 
-
-# SVMs
+# Models
 *.pickle
 !models/*.pickle
 

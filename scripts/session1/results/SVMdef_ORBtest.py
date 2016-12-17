@@ -24,7 +24,7 @@ print train_images_filenames[1]
 
 
 # read the just 30 train images per class
-# extract SIFT keypoints and descriptors
+# extract sift keypoints and descriptors
 # store descriptors in a python list of numpy arrays
 final_accuracy = []
 Train_descriptors = []
@@ -41,7 +41,7 @@ for levels in range(4, 15):
                     ima = cv2.imread(filename)
                     gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
                     ##kpt, des = SIFT_detector.detectAndCompute(gray, None)
-                    kpt, des = feature_extraction.ORB(gray, levels, et, wtak)
+                    kpt, des = feature_extraction.orb(gray, levels, et, wtak)
                     Train_descriptors.append(des)
                     Train_label_per_descriptor.append(train_labels[i])
                     print str(len(kpt)) + ' extracted keypoints and descriptors'
@@ -82,7 +82,7 @@ for levels in range(4, 15):
                 filename = "../."+filename
                 ima = cv2.imread(filename)
                 gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-                kpt, des = feature_extraction.ORB(gray, levels, et, wtak)
+                kpt, des = feature_extraction.orb(gray, levels, et, wtak)
                 des_pca = pca.transform(des)
                 predictions = clf.predict(stdSlr.transform(des_pca))
                 values, counts = np.unique(predictions, return_counts=True)

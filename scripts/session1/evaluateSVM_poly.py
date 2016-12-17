@@ -17,18 +17,19 @@ test_labels = cPickle.load(open('./dataset/test_labels.dat', 'r'))
 print('Loaded ' + str(len(train_images_filenames)) + ' training images filenames with classes ', set(train_labels))
 print('Loaded ' + str(len(test_images_filenames)) + ' testing images filenames with classes ', set(test_labels))
 
-# create the SIFT detector object
+# create the sift detector object
 SIFT_detector = cv2.SIFT(nfeatures=100)
 
 # read the just 30 train images per class
-# extract SIFT keypoints and descriptors
+# extract sift keypoints and descriptors
 # store descriptors in a python list of numpy arrays
 
 Train_descriptors = []
 Train_label_per_descriptor = []
 Accuracy = []
 Time = []
-Cost= []
+Degree = []
+Gamma = []
 
 for i in range(len(train_images_filenames)):
     filename = train_images_filenames[i]
@@ -61,39 +62,37 @@ stdSlr = StandardScaler().fit(D_pca)
 # Scale training data
 D_scaled = stdSlr.transform(D_pca)
 
-for c in range(1, 10):
-    # Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
-    print('For cost c: ' + str(c))
-    clf = svm.SVC(kernel='poly', C=c, degree=3, coef0=3)
-    clf.fit(D_scaled, L)
 
-    # get all the test data and predict their labels
-    start = time.time()
-    num_test_images = 0
-    num_correct = 0
-    for i in range(len(test_images_filenames)):
-        filename = test_images_filenames[i]
-        ima = cv2.imread(filename)
-        gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-        kpt, des = SIFT_detector.detectAndCompute(gray, None)
-        des_pca = pca.transform(des)
-        predictions = clf.predict(stdSlr.transform(des_pca))
-        values, counts = np.unique(predictions, return_counts=True)
-        predictedclass = values[np.argmax(counts)]
-        num_test_images += 1
-        if predictedclass == test_labels[i]:
-            num_correct += 1
-    end = time.time()
+# Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
 
-    print('Final accuracy: ' + str(num_correct * 100.0 / num_test_images))
+clf = svm.SVC(kernel='poly', C=4, degree=3, coef0=3)
+clf.fit(D_scaled, L)
 
-    # Save the accuracy and time spent in the classification for each dimension
-    Accuracy.append((num_correct * 100.0 / num_test_images))
-    Time.append((end - start))
-    Cost.append(c)
+# get all the test data and predict their labels
+start = time.time()
+num_test_images = 0
+num_correct = 0
+for i in range(len(test_images_filenames)):
+    filename = test_images_filenames[i]
+    ima = cv2.imread(filename)
+    gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
+    kpt, des = SIFT_detector.detectAndCompute(gray, None)
+    des_pca = pca.transform(des)
+    predictions = clf.predict(stdSlr.transform(des_pca))
+    values, counts = np.unique(predictions, return_counts=True)
+    predictedclass = values[np.argmax(counts)]
+    num_test_images += 1
+    if predictedclass == test_labels[i]:
+        num_correct += 1
+end = time.time()
 
+print('Final accuracy: ' + str(num_correct * 100.0 / num_test_images))
+
+# Save the accuracy and time spent in the classification for each dimension
+Accuracy.append((num_correct * 100.0 / num_test_images))
+Time.append((end - start))
 # Save the results
-results = [Cost, Accuracy, Time]
-file = open('ResultsSVM_poly_cost.pickle', 'wb')
-cPickle.dump(results, file)
-file.close()
+results = [Degree, Gamma, Accuracy, Time]
+#file = open('ResultsSVM_poly.pickle', 'wb')
+#cPickle.dump(results, file)
+#file.close()

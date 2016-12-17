@@ -17,19 +17,18 @@ test_labels = cPickle.load(open('./dataset/test_labels.dat', 'r'))
 print('Loaded ' + str(len(train_images_filenames)) + ' training images filenames with classes ', set(train_labels))
 print('Loaded ' + str(len(test_images_filenames)) + ' testing images filenames with classes ', set(test_labels))
 
-# create the SIFT detector object
+# create the sift detector object
 SIFT_detector = cv2.SIFT(nfeatures=100)
 
 # read the just 30 train images per class
-# extract SIFT keypoints and descriptors
+# extract sift keypoints and descriptors
 # store descriptors in a python list of numpy arrays
 
 Train_descriptors = []
 Train_label_per_descriptor = []
 Accuracy = []
 Time = []
-Degree = []
-Gamma = []
+Cost= []
 
 for i in range(len(train_images_filenames)):
     filename = train_images_filenames[i]
@@ -62,10 +61,10 @@ stdSlr = StandardScaler().fit(D_pca)
 # Scale training data
 D_scaled = stdSlr.transform(D_pca)
 
-for d in range(1, 10):
+for c in range(1, 10):
     # Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
-    print('For value d: ' + str(d*0.1))
-    clf = svm.SVC(kernel='rbf', C=1, gamma=d*0.1)
+    print('For cost c: ' + str(c))
+    clf = svm.SVC(kernel='poly', C=c, degree=3, coef0=3)
     clf.fit(D_scaled, L)
 
     # get all the test data and predict their labels
@@ -91,10 +90,10 @@ for d in range(1, 10):
     # Save the accuracy and time spent in the classification for each dimension
     Accuracy.append((num_correct * 100.0 / num_test_images))
     Time.append((end - start))
-    Degree.append(d*0.1)
+    Cost.append(c)
 
 # Save the results
-results = [Degree, Gamma, Accuracy, Time]
-file = open('ResultsSVM_rbf_2nd.pickle', 'wb')
+results = [Cost, Accuracy, Time]
+file = open('ResultsSVM_poly_cost.pickle', 'wb')
 cPickle.dump(results, file)
 file.close()

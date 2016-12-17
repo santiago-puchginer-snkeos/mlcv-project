@@ -22,7 +22,7 @@ def BRISK(gray):
     return kp, des
 def BRIEF(gray):
     detector = cv2.SimpleBlobDetector()
-    brief = cv2.DescriptorExtractor_create("BRIEF")
+    brief = cv2.DescriptorExtractor_create("brief")
     kp = detector.detect(gray)
     kp, des = brief.compute(gray, kp)
 
