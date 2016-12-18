@@ -26,7 +26,7 @@ def train_linear_svm(X, y, C=1, model_name=None, liblinear=False):
     return clf, std_scaler
 
 
-def predict_linear_svm(X, svm, std_scaler=None):
+def predict_svm(X, svm, std_scaler=None):
     # Standardize data
     if std_scaler is None:
         X_std = X

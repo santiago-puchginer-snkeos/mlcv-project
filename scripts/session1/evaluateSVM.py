@@ -12,20 +12,15 @@ if __name__ == '__main__':
 
     start = time.time()
 
+    kernel='linear' #{'linear','poly','rbf','sigmoid'}
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
     print('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_classes=30, n_jobs=6)
+    D, L, _ = feature_extraction.seq_sift(train_images_filenames, train_labels, num_samples_class=30)
     print('Time spend: {:.2f} s'.format(time.time() - start))
-    temp = time.time()
-
-    # Train Linear SVM classifier
-    print('Training the SVM classifier...')
-    lin_svm, std_scaler = classification.train_linear_svm(D, L)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Read the test set
@@ -34,9 +29,18 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, I = feature_extraction.parallel_sift(test_images_filenames, test_labels)
+    D, L, I = feature_extraction.seq_sift(test_images_filenames, test_labels)
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
+
+    # Train Linear SVM classifier
+    print('Training the SVM classifier...')
+    if kernel=='linear':
+
+        lin_svm, std_scaler = classification.train_linear_svm(D, L)
+    print('Time spend: {:.2f} s'.format(time.time() - temp))
+    temp = time.time()
+
 
     # Predict labels for all sift descriptors
     print('Predicting labels for all descriptors...')

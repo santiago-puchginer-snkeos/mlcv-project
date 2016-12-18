@@ -28,8 +28,7 @@ Train_descriptors = []
 Train_label_per_descriptor = []
 Accuracy = []
 Time = []
-Degree = []
-Gamma = []
+Cost= []
 
 for i in range(len(train_images_filenames)):
     filename = train_images_filenames[i]
@@ -61,43 +60,40 @@ D_pca = pca.transform(D)
 stdSlr = StandardScaler().fit(D_pca)
 # Scale training data
 D_scaled = stdSlr.transform(D_pca)
-vec=np.linspace(-20, 20, 5 )
-for d in vec:
+
+for c in range(1, 10):
     # Transform the data to different dimensions with PCA and train a linear SVM classifier for each value
-    print('For value d: ' + str(d*0.1))
-    for g in range(1, 5):
-        print('For value g: ' + str(g * 0.1))
-        clf = svm.SVC(kernel='sigmoid', C=1, coef0=d*0.1,gamma=g*0.1)
-        clf.fit(D_scaled, L)
+    print('For cost c: ' + str(c))
+    clf = svm.SVC(kernel='linear', C=c)
+    clf.fit(D_scaled, L)
 
-        # get all the test data and predict their labels
-        start = time.time()
-        num_test_images = 0
-        num_correct = 0
-        for i in range(len(test_images_filenames)):
-            filename = test_images_filenames[i]
-            ima = cv2.imread(filename)
-            gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-            kpt, des = SIFT_detector.detectAndCompute(gray, None)
-            des_pca = pca.transform(des)
-            predictions = clf.predict(stdSlr.transform(des_pca))
-            values, counts = np.unique(predictions, return_counts=True)
-            predictedclass = values[np.argmax(counts)]
-            num_test_images += 1
-            if predictedclass == test_labels[i]:
-                num_correct += 1
-        end = time.time()
+    # get all the test data and predict their labels
+    start = time.time()
+    num_test_images = 0
+    num_correct = 0
+    for i in range(len(test_images_filenames)):
+        filename = test_images_filenames[i]
+        ima = cv2.imread(filename)
+        gray = cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
+        kpt, des = SIFT_detector.detectAndCompute(gray, None)
+        des_pca = pca.transform(des)
+        predictions = clf.predict(stdSlr.transform(des_pca))
+        values, counts = np.unique(predictions, return_counts=True)
+        predictedclass = values[np.argmax(counts)]
+        num_test_images += 1
+        if predictedclass == test_labels[i]:
+            num_correct += 1
+    end = time.time()
 
-        print('Final accuracy: ' + str(num_correct * 100.0 / num_test_images))
+    print('Final accuracy: ' + str(num_correct * 100.0 / num_test_images))
 
-        # Save the accuracy and time spent in the classification for each dimension
-        Accuracy.append((num_correct * 100.0 / num_test_images))
-        Time.append((end - start))
-        Degree.append(d*0.1)
-        Gamma.append(g*0.1)
+    # Save the accuracy and time spent in the classification for each dimension
+    Accuracy.append((num_correct * 100.0 / num_test_images))
+    Time.append((end - start))
+    Cost.append(c)
 
 # Save the results
-results = [Degree, Gamma, Accuracy, Time]
-file = open('ResultsSVM_sigmoid_2nd_lighter.pickle', 'wb')
+results = [Cost, Accuracy, Time]
+file = open('ResultsSVM_linear_cost.pickle', 'wb')
 cPickle.dump(results, file)
 file.close()

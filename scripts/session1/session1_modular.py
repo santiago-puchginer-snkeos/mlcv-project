@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # Predict labels for all sift descriptors
     print('Predicting labels for all descriptors...')
-    predicted_labels = classification.predict_linear_svm(D, lin_svm, std_scaler)
+    predicted_labels = classification.predict_svm(D, lin_svm, std_scaler)
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
