@@ -116,9 +116,10 @@ def seq_surf(list_images_filenames, list_images_labels, num_samples_class=-1, **
     labels_matrix = np.array([label_per_descriptor[0]] * descriptors[0].shape[0])
     indices_matrix = np.array([image_id_per_descriptor[0]] * descriptors[0].shape[0])
     for i in range(1, len(descriptors)):
-        descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
-        labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
-        indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
+        if not descriptors[i] is None:
+            descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
+            labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
+            indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
     return descriptors_matrix, labels_matrix, indices_matrix
 
