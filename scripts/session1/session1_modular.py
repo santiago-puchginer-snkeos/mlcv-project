@@ -4,7 +4,7 @@ import time
 
 import numpy as np
 
-import mlcv.io as io
+import mlcv.input_output as io
 import mlcv.feature_extraction as feature_extraction
 import mlcv.classification as classification
 

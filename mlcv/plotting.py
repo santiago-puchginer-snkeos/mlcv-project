@@ -1,39 +1,42 @@
 import cPickle
-
-import matplotlib.pyplot as plt
+import time
+import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
+import mlcv.input_output as io
 
-
-def plotSVMparam():  # filename='../ResultsSVM_poly.pickle'
+def plotSVMparam(filename,mode='2d',name='default'):  # filename='../ResultsSVM_poly.pickle'
     results = []
-    file = open('../ResultsSVM_poly.pickle', 'r')
+    file = open(filename, 'r')
 
     results = cPickle.load(file)
 
     print(results)
-    # plt.plot(results[0],results[2])
-
-    # X, Y = np.meshgrid(results[0],results[1])
-
     fig = plt.figure()
+    fig.suptitle(name, fontsize=14, fontweight='bold')
+    if mode=='3d':
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(results[0], results[1], results[2], c='r', marker='o')
+        if name=='poly':
+            ax.set_xlabel('d')
+            ax.set_ylabel('r')
+            ax.set_zlabel('Accuracy')
+            D = results[0]
+            G = results[1]
+            A = results[2]
+            ind = np.argmax(results[2])
+            print(
+                'POLY: Best parameters are: Degree ' + str(D[ind]) + ' Gamma ' + str(G[ind]) + ' with Accuracy ' + str(
+                    A[ind]))
+        elif name='sigmoid':
 
-    fig.suptitle('Polynomial', fontsize=14, fontweight='bold')
-    ax = fig.add_subplot(111, projection='3d')
-    # ax.plot_surface(X,Y,results[2], cmap=plt.cm.jet, cstride=1, rstride=1)
-    ax.scatter(results[0], results[1], results[2], c='r', marker='o')
-
-    ax.set_xlabel('d')
-    ax.set_ylabel('r')
-    ax.set_zlabel('Accuracy')
 
     plt.show()
-    D = results[0]
-    G = results[1]
-    A = results[2]
-    ind = np.argmax(results[2])
-    print(
-    'POLY: Best parameters are: Degree ' + str(D[ind]) + ' Gamma ' + str(G[ind]) + ' with Accuracy ' + str(A[ind]))
 
+########
     file = open('../ResultsSVM_rbf_2nd.pickle', 'r')
 
     results = cPickle.load(file)
@@ -83,7 +86,56 @@ def plotSVMparam():  # filename='../ResultsSVM_poly.pickle'
     # print('Best parameters are: Degree ' +str(D[ind])+ ' Gamma '+str(G[ind])+ ' with Accuracy '+str(A[ind]))
     print('Sigmoid: Best parameters are: R ' + str(G[ind]) + ' with Accuracy ' + str(A[ind]))
 
+    file = open('../ResultsSVM_sigmoid_2nd_lighter.pickle', 'r')
+
+    results = cPickle.load(file)
+
+    print(results)
+    # plt.plot(results[0],results[2])
+
+    # X, Y = np.meshgrid(results[0],results[1])
+
+    fig = plt.figure()
+
+    fig.suptitle('Sigmoid', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot(111, projection='3d')
+    # ax.plot_surface(X,Y,results[2], cmap=plt.cm.jet, cstride=1, rstride=1)
+    ax.scatter(results[0], results[1], results[2], c='r', marker='o')
+
+    ax.set_xlabel('r')
+    ax.set_ylabel('gamma')
+    ax.set_zlabel('Accuracy')
+
+    plt.show()
+    D = results[0]
+    G = results[1]
+    A = results[2]
+    ind = np.argmax(results[2])
+    print('Sigmoid 2D: Best parameters are: Degree ' + str(D[ind]) + ' Gamma ' + str(G[ind]) + ' with Accuracy ' + str(
+        A[ind]))
+
     ##### Cost sweep
+
+    file = open('../ResultsSVM_linear_cost.pickle', 'r')
+
+    results = cPickle.load(file)
+
+    print(results)
+    fig = plt.figure()
+    fig.suptitle('Linear', fontsize=14, fontweight='bold')
+
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel('Cost')
+    ax.set_ylabel('Accuracy')
+    ax.plot(results[0], results[1])
+
+    plt.show()
+    C = results[0]
+    A = results[1]
+    ind = np.argmax(results[1])
+    print('Linear-cost : Best parameters are: C ' + str(C[ind]) + ' with Accuracy ' + str(A[ind]))
+
     file = open('../ResultsSVM_poly_cost.pickle', 'r')
 
     results = cPickle.load(file)
@@ -104,7 +156,7 @@ def plotSVMparam():  # filename='../ResultsSVM_poly.pickle'
     ind = np.argmax(results[1])
     print('Poly-cost : Best parameters are: C ' + str(C[ind]) + ' with Accuracy ' + str(A[ind]))
 
-    file = open('../ResultsSVM_rbf_cost.pickle', 'r')
+    file = open('../ResultsSVM_rbf_cost_2nd.pickle', 'r')
 
     results = cPickle.load(file)
 

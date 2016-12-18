@@ -2,7 +2,7 @@ import cv2
 import joblib
 import numpy as np
 
-import mlcv.io as io
+import mlcv.input_output as io
 
 
 def sift(gray):

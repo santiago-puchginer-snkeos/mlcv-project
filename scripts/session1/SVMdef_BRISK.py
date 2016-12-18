@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 import mlcv.feature_extraction as feature_extraction
-import mlcv.io as io
+import mlcv.input_output as io
 
 start = time.time()
 
