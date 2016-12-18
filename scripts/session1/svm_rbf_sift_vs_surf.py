@@ -43,7 +43,7 @@ FEATURE_EXTRACTION_OPTIONS = {
     'sift': (feature_extraction.parallel_sift, parallel_testing_sift),
     'surf': (feature_extraction.parallel_surf, parallel_testing_surf)
 }
-NUM_SAMPLES_OPTIONS = [-1, 30]
+NUM_SAMPLES_OPTIONS = [30, -1]
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
