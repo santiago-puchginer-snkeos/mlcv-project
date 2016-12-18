@@ -9,11 +9,12 @@ from mpl_toolkits.mplot3d import Axes3D
 import mlcv.input_output as io
 import itertools
 
+
 def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSVM_poly.pickle'
     results = []
-    file = open(filename, 'r')
-
-    results = cPickle.load(file)
+    #file = open(filename, 'r')
+    #results = cPickle.load(file)
+    results = io.load_object(filename)
 
     print(results)
     fig = plt.figure()
@@ -36,10 +37,10 @@ def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSV
         G = results[1]
         A = results[2]
         ind = np.argmax(results[2])
-        print(name+' 2D: Best parameters are: Degree ' + str(D[ind]) + ' Gamma ' + str(
+        print(name + ' 2D: Best parameters are: Degree ' + str(D[ind]) + ' Gamma ' + str(
             G[ind]) + ' with Accuracy ' + str(
             A[ind]))
-    elif mode=='2d':
+    elif mode == '2d':
         ax = fig.add_subplot(111)
         ax.plot(results[0], results[2])
         ax.set_xlabel('Gamma')
@@ -47,8 +48,8 @@ def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSV
         G = results[0]
         A = results[2]
         ind = np.argmax(results[2])
-        print(name+ ' : Best parameters are: Gamma ' + str(G[ind]) + ' with Accuracy ' + str(A[ind]))
-    elif mode=='cost':
+        print(name + ' : Best parameters are: Gamma ' + str(G[ind]) + ' with Accuracy ' + str(A[ind]))
+    elif mode == 'cost':
         ax = fig.add_subplot(111)
         ax.set_xlabel('Cost')
         ax.set_ylabel('Accuracy')
@@ -57,7 +58,7 @@ def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSV
         C = results[0]
         A = results[1]
         ind = np.argmax(results[1])
-        print(name+'-cost : Best parameters are: C ' + str(C[ind]) + ' with Accuracy ' + str(A[ind]))
+        print(name + '-cost : Best parameters are: C ' + str(C[ind]) + ' with Accuracy ' + str(A[ind]))
 
     plt.show()
 
