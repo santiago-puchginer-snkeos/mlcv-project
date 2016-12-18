@@ -39,6 +39,7 @@ The whole dataset can be downloaded [here](https://drive.google.com/open?id=0Byr
 | mlcv | Store all the functions and classes used to run the experiments |
 | scripts| Store all the scripts that import certain functions and classes from mlcv and execute the desired experiments |
 | dataset | Store the .dat files containing the paths to the images and the corresponding labels, as well as the images themselves |
+| models | Store all the pickle files with the objects obtained during training (classifiers, standard scalers, PCAs, etc.) |
 
 ## Dependencies 
 
