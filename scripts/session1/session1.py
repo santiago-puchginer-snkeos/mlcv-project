@@ -26,6 +26,7 @@ SIFTdetector = cv2.SIFT(nfeatures=100)
 # extract SIFT keypoints and descriptors
 # store descriptors in a python list of numpy arrays
 
+print('Obtaining sift features...')
 Train_descriptors = []
 Train_label_per_descriptor = []
 
@@ -53,17 +54,16 @@ print('Time spend: {:.2f} s'.format(time.time() - start))
 temp = time.time()
 
 # Train a linear SVM classifier
-
+print 'Training the SVM classifier...'
 stdSlr = StandardScaler().fit(D)
 D_scaled = stdSlr.transform(D)
-print 'Training the SVM classifier...'
 clf = svm.SVC(kernel='linear', C=1)
 clf.fit(D_scaled, L)
 print 'Done!'
 print('Time spend: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
-# get all the test data and predict their labels
+# Get all the test data and predict their labels
 print('Predicting test data...')
 numtestimages = 0
 numcorrect = 0

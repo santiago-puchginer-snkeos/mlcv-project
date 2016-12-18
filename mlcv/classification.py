@@ -1,13 +1,25 @@
+import sklearn.decomposition as decomposition
 import sklearn.preprocessing as preprocessing
 import sklearn.svm as svm
 
 import mlcv.io as io
 
 
-def train_linear_svm(X, y, C=1, model_name=None, liblinear=False):
-    # Standardize the data before classification
-    std_scaler = preprocessing.StandardScaler().fit(X)
-    X_std = std_scaler.transform(X)
+def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scaler=False, save_pca=False,
+                     model_name=None, liblinear=False):
+    # PCA for dimensionality reduction if necessary
+    pca = decomposition.PCA(n_components=dim_reduction)
+    if dim_reduction is not None and dim_reduction > 0:
+        pca.fit(X)
+        X = pca.transform(X)
+
+    # Standardize the data before classification if necessary
+    std_scaler = preprocessing.StandardScaler()
+    if standardize:
+        std_scaler.fit(X)
+        X_std = std_scaler.transform(X)
+    else:
+        X_std = X
 
     # Instance of SVM classifier
     clf = svm.LinearSVC(C=C, max_iter=5000, tol=1e-4) if liblinear else svm.SVC(kernel='linear', C=C)
@@ -23,10 +35,20 @@ def train_linear_svm(X, y, C=1, model_name=None, liblinear=False):
     else:
         clf.fit(X_std, y)
 
-    return clf, std_scaler
+    if save_scaler:
+        io.save_object(std_scaler, save_scaler)
+
+    if save_pca:
+        io.save_object(pca, save_pca)
+
+    return clf, std_scaler, pca
 
 
-def predict_svm(X, svm, std_scaler=None):
+def predict_svm(X, svm, std_scaler=None, pca=None):
+    # Apply PCA if available
+    if pca is not None:
+        X = pca.transform(X)
+
     # Standardize data
     if std_scaler is None:
         X_std = X

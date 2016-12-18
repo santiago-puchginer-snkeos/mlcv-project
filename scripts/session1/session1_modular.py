@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler = classification.train_linear_svm(D, L)
+    lin_svm, std_scaler, pca = classification.train_linear_svm(D, L, model_name='linsvm_sift_30s')
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -33,19 +33,13 @@ if __name__ == '__main__':
     print('Loaded {} test images.'.format(len(test_images_filenames)))
 
     # Feature extraction with sift
-    print('Obtaining sift features...')
+    print('Predicting test data...')
     D, L, I = feature_extraction.seq_sift(test_images_filenames, test_labels)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
-    temp = time.time()
 
     # Predict labels for all sift descriptors
-    print('Predicting labels for all descriptors...')
     predicted_labels = classification.predict_svm(D, lin_svm, std_scaler)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
-    temp = time.time()
 
     # Aggregate predictions
-    print('Aggregating predictions of descriptors to obtain a single label...')
     num_correct = 0
     for i in range(len(test_images_filenames)):
         predictions_image = predicted_labels[I == i]
@@ -60,6 +54,6 @@ if __name__ == '__main__':
     accuracy = num_correct * 100.0 / len(test_images_filenames)
 
     # Show results and timing
-    print('\nACCURACY: {}'.format(accuracy))
-    print('\nTOTAL TIME: {} s'.format(time.time() - start))
+    print('\nACCURACY: {:.2f}'.format(accuracy))
+    print('\nTOTAL TIME: {:.2f} s'.format(time.time() - start))
 
