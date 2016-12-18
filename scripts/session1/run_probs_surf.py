@@ -10,7 +10,7 @@ import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 from mlcv.plotting import plotConfusionMatrix
-from mlcv.utilities import load_models
+
 
 
 """ CONSTANTS """
@@ -21,12 +21,15 @@ def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
     probs = [0,0,0,0,0,0,0,0]
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.surf(gray)
-    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
-    for j in range(0, len(predictions)):
-        probs = probs + predictions[j]
-    predicted_class = lin_svm.classes_[np.argmax(probs)]
+    if des is not None:
+        predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
+        for j in range(0, len(predictions)):
+            probs = probs + predictions[j]
+        predicted_class = lin_svm.classes_[np.argmax(probs)]
 
-    return predicted_class == test_label, predicted_class, test_label
+        return predicted_class == test_label, predicted_class, test_label
+    else:
+        return False, 'none', test_label
 
 
 """ MAIN SCRIPT"""
@@ -39,8 +42,7 @@ if __name__ == '__main__':
 
     # Feature extraction with surf
     print('Obtaining surf features...')
-    D, L, _ = feature_extraction.parallel_surf(train_images_filenames, train_labels, num_samples_class=30,
-                                               n_jobs=N_JOBS)
+    D, L, _ = feature_extraction.parallel_surf(train_images_filenames, train_labels)
     print('Time spend: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
@@ -58,12 +60,13 @@ if __name__ == '__main__':
     # Feature extraction with surf, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     result = joblib.Parallel(n_jobs=N_JOBS, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, pca) for test_image, test_label in
+        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, None) for test_image, test_label in
         zip(test_images_filenames, test_labels))
 
+
     correct_class = [i[0] for i in result]
-    predicted = [i[1] for i in result]
-    expected = [i[2] for i in result]
+    predicted = [i[1] for i in result if i[0] is not False]
+    expected = [i[2] for i in result if i[0] is not False]
 
     num_correct = np.count_nonzero(correct_class)
     print('Time spend: {:.2f} s'.format(time.time() - temp))
@@ -74,7 +77,7 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
+    plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
 
     io.save_object(conf, 'final_surf_30_cm')
 

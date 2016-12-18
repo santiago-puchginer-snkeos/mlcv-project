@@ -21,13 +21,15 @@ def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
     probs = [0,0,0,0,0,0,0,0]
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.surf(gray)
-    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
-    for j in range(0, len(predictions)):
-        probs = probs + predictions[j]
-    predicted_class = lin_svm.classes_[np.argmax(probs)]
+    if des is not None:
+        predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
+        for j in range(0, len(predictions)):
+            probs = probs + predictions[j]
+        predicted_class = lin_svm.classes_[np.argmax(probs)]
 
-    return predicted_class == test_label, predicted_class, test_label
-
+        return predicted_class == test_label, predicted_class, test_label
+    else:
+        return False, 'none', test_label
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
