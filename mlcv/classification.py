@@ -4,15 +4,13 @@ import sklearn.svm as svm
 import mlcv.io as io
 
 
-def train_linear_svm(X, y, C=1, model_name=None, liblinear=True):
+def train_linear_svm(X, y, C=1, model_name=None, liblinear=False):
     # Standardize the data before classification
-    std_scaler = preprocessing.StandardScaler()
-    std_scaler.fit(X)
+    std_scaler = preprocessing.StandardScaler().fit(X)
     X_std = std_scaler.transform(X)
 
     # Instance of SVM classifier
-    clf = svm.LinearSVC(C=C, max_iter=5000, tol=1e-4) if liblinear else svm.SVC(kernel='linear', C=C,
-                                                                                cache_size=2048)
+    clf = svm.LinearSVC(C=C, max_iter=5000, tol=1e-4) if liblinear else svm.SVC(kernel='linear', C=C)
 
     if model_name is not None:
         # Try to load a previously trained model

@@ -57,13 +57,14 @@ temp = time.time()
 stdSlr = StandardScaler().fit(D)
 D_scaled = stdSlr.transform(D)
 print 'Training the SVM classifier...'
-clf = svm.SVC(kernel='linear', C=1).fit(D_scaled, L)
+clf = svm.SVC(kernel='linear', C=1)
+clf.fit(D_scaled, L)
 print 'Done!'
 print('Time spend: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
 # get all the test data and predict their labels
-
+print('Predicting test data...')
 numtestimages = 0
 numcorrect = 0
 for i in range(len(test_images_filenames)):
