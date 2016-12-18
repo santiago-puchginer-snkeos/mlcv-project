@@ -9,22 +9,18 @@ from sklearn import metrics
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
-from mlcv.plotting import plotConfusionMatrix
-from mlcv.utilities import load_models
-
+from mlcv.plotting import plot_confusion_matrix
 
 """ CONSTANTS """
 N_JOBS = 6
 
 
 def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
-    probs = [0,0,0,0,0,0,0,0]
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.sift(gray)
     predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
-    for j in range(0, len(predictions)):
-        probs = probs + predictions[j]
-    predicted_class = lin_svm.classes_[np.argmax(probs)]
+    probabilities = np.sum(predictions, axis=0)
+    predicted_class = lin_svm.classes_[np.argmax(probabilities)]
 
     return predicted_class == test_label, predicted_class, test_label
 
@@ -74,7 +70,7 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
+    plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
 
     io.save_object(conf, 'final_sift_30_cm')
 

@@ -4,34 +4,36 @@ import time
 
 import joblib
 import numpy as np
+import sklearn.metrics as metrics
 
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
+from mlcv.plotting import plot_confusion_matrix
 
 
 def parallel_testing_sift(test_image, test_label, svm, std_scaler, pca):
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.sift(gray)
     if des is not None:
-        predictions = classification.predict_svm(des, svm, std_scaler=std_scaler, pca=pca)
-        values, counts = np.unique(predictions, return_counts=True)
-        predicted_class = values[np.argmax(counts)]
-        return predicted_class == test_label
+        predictions = classification.predict_svm(des, svm, std_scaler=std_scaler, pca=pca, probability=True)
+        probabilities = np.sum(predictions, axis=0)
+        predicted_class = svm.classes_[np.argmax(probabilities)]
+        return predicted_class == test_label, predicted_class, test_label
     else:
-        return False
+        return False, np.nan, test_label
 
 
 def parallel_testing_surf(test_image, test_label, svm, std_scaler, pca):
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.surf(gray)
     if des is not None:
-        predictions = classification.predict_svm(des, svm, std_scaler=std_scaler, pca=pca)
-        values, counts = np.unique(predictions, return_counts=True)
-        predicted_class = values[np.argmax(counts)]
-        return predicted_class == test_label
+        predictions = classification.predict_svm(des, svm, std_scaler=std_scaler, pca=pca, probability=True)
+        probabilities = np.sum(predictions, axis=0)
+        predicted_class = svm.classes_[np.argmax(probabilities)]
+        return predicted_class == test_label, predicted_class, test_label
     else:
-        return False
+        return False, np.nan, test_label
 
 
 """ CONSTANTS """
@@ -41,7 +43,7 @@ FEATURE_EXTRACTION_OPTIONS = {
     'sift': (feature_extraction.parallel_sift, parallel_testing_sift),
     'surf': (feature_extraction.parallel_surf, parallel_testing_surf)
 }
-NUM_SAMPLES_OPTIONS = [30, -1]
+NUM_SAMPLES_OPTIONS = [-1, 30]
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
@@ -95,15 +97,19 @@ if __name__ == '__main__':
 
                 # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
                 print('Predicting test data...')
-                correct_class = joblib.Parallel(n_jobs=N_JOBS, backend='threading')(
+                result = joblib.Parallel(n_jobs=N_JOBS, backend='threading')(
                     joblib.delayed(predict_function)(test_image, test_label, svm, std_scaler, pca) for
                     test_image, test_label in
                     zip(test_images_filenames, test_labels))
-                num_correct = np.count_nonzero(correct_class)
                 print('Time spend: {:.2f} s'.format(time.time() - temp))
                 temp = time.time()
 
+                correct_class = [i[0] for i in result]
+                predicted = [i[1] for i in result]
+                expected = [i[2] for i in result]
+
                 # Compute accuracy
+                num_correct = np.count_nonzero(correct_class)
                 accuracy = num_correct * 100.0 / len(test_images_filenames)
 
                 # Show results and timing
@@ -113,3 +119,15 @@ if __name__ == '__main__':
 
                 # Store it in object
                 results.append([fe_name, num_samples, dim_red_option, accuracy])
+
+                # Confusion matrix
+                conf = metrics.confusion_matrix(expected, predicted, labels=svm.classes_)
+                # Plot normalized confusion matrix
+                # plot_confusion_matrix(conf, classes=svm.classes_, normalize=True)
+
+                io.save_object(conf, 'conf_matrix_svm_{}_{}s_{}c'.format(
+                    fe_name,
+                    num_samples if num_samples > -1 else 'all',
+                    dim_red_option if dim_red_option is not None else 'all'
+                )
+                )

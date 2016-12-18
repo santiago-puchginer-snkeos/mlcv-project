@@ -8,14 +8,16 @@ import mlcv.input_output as io
 def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scaler=False, save_pca=False,
                      model_name=None, liblinear=False):
     # PCA for dimensionality reduction if necessary
-    pca = decomposition.PCA(n_components=dim_reduction)
+    pca = None
     if dim_reduction is not None and dim_reduction > 0:
+        pca = decomposition.PCA(n_components=dim_reduction)
         pca.fit(X)
         X = pca.transform(X)
 
     # Standardize the data before classification if necessary
-    std_scaler = preprocessing.StandardScaler()
+    std_scaler = None
     if standardize:
+        std_scaler = preprocessing.StandardScaler()
         std_scaler.fit(X)
         X_std = std_scaler.transform(X)
     else:
@@ -47,21 +49,23 @@ def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scale
 def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, standardize=True, dim_reduction=None,
                    save_scaler=False, save_pca=False, model_name=None):
     # PCA for dimensionality reduction if necessary
-    pca = decomposition.PCA(n_components=dim_reduction)
+    pca = None
     if dim_reduction is not None and dim_reduction > 0:
+        pca = decomposition.PCA(n_components=dim_reduction)
         pca.fit(X)
         X = pca.transform(X)
 
     # Standardize the data before classification if necessary
-    std_scaler = preprocessing.StandardScaler()
+    std_scaler = None
     if standardize:
+        std_scaler = preprocessing.StandardScaler()
         std_scaler.fit(X)
         X_std = std_scaler.transform(X)
     else:
         X_std = X
 
     # Instance of SVM classifier
-    clf = svm.SVC(kernel='poly', C=C, degree=degree, gamma=gamma, coef0=coef0)
+    clf = svm.SVC(kernel='poly', C=C, degree=degree, gamma=gamma, coef0=coef0, probability=True)
 
     if model_name is not None:
         # Try to load a previously trained model
@@ -86,14 +90,16 @@ def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, standardize=Tru
 def train_rbf_svm(X, y, C=1, gamma='auto', standardize=True, dim_reduction=None,
                   save_scaler=False, save_pca=False, model_name=None):
     # PCA for dimensionality reduction if necessary
-    pca = decomposition.PCA(n_components=dim_reduction)
+    pca = None
     if dim_reduction is not None and dim_reduction > 0:
+        pca = decomposition.PCA(n_components=dim_reduction)
         pca.fit(X)
         X = pca.transform(X)
 
     # Standardize the data before classification if necessary
-    std_scaler = preprocessing.StandardScaler()
+    std_scaler = None
     if standardize:
+        std_scaler = preprocessing.StandardScaler()
         std_scaler.fit(X)
         X_std = std_scaler.transform(X)
     else:
@@ -125,20 +131,22 @@ def train_rbf_svm(X, y, C=1, gamma='auto', standardize=True, dim_reduction=None,
 def train_sigmoid_svm(X, y, C=1, gamma='auto', coef0=0.0, standardize=True, dim_reduction=None,
                       save_scaler=False, save_pca=False, model_name=None):
     # PCA for dimensionality reduction if necessary
-    pca = decomposition.PCA(n_components=dim_reduction)
+    pca = None
     if dim_reduction is not None and dim_reduction > 0:
+        pca = decomposition.PCA(n_components=dim_reduction)
         pca.fit(X)
         X = pca.transform(X)
 
     # Standardize the data before classification if necessary
-    std_scaler = preprocessing.StandardScaler()
+    std_scaler = None
     if standardize:
+        std_scaler = preprocessing.StandardScaler()
         std_scaler.fit(X)
         X_std = std_scaler.transform(X)
     else:
         X_std = X
 
-    clf = svm.SVC(kernel='sigmoid', C=C, gamma=gamma, coef0=coef0)
+    clf = svm.SVC(kernel='sigmoid', C=C, gamma=gamma, coef0=coef0, probability=True)
 
     if model_name is not None:
         # Instance of SVM classifier
@@ -173,9 +181,7 @@ def predict_svm(X, svm, std_scaler=None, pca=None, probability=False):
         X_std = std_scaler.transform(X)
 
     # Predict the labels
-    if probability is False:
-        return svm.predict(X_std)
-    else:
+    if probability:
         return svm.predict_proba(X_std)
-
-
+    else:
+        return svm.predict(X_std)

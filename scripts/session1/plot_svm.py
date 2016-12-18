@@ -1,4 +1,4 @@
-from mlcv.plotting import plotSVMparam as splot
+from mlcv.plotting import plot_svm_param as splot
 
 
 

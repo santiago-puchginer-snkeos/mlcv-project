@@ -9,7 +9,7 @@ from sklearn import metrics
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
-from mlcv.plotting import plotConfusionMatrix
+from mlcv.plotting import plot_confusion_matrix
 
 
 """ CONSTANTS """
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
+    plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
 
     io.save_object(conf, 'final_noprob_sift_30_cm')
 

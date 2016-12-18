@@ -1,19 +1,12 @@
-import cPickle
-import time
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
-import mlcv.input_output as io
 import itertools
 
+import matplotlib.pyplot as plt
+import numpy as np
 
-def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSVM_poly.pickle'
-    results = []
-    #file = open(filename, 'r')
-    #results = cPickle.load(file)
+import mlcv.input_output as io
+
+
+def plot_svm_param(filename, mode='2d', name='default'):
     results = io.load_object(filename)
 
     print(results)
@@ -63,29 +56,28 @@ def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSV
     plt.show()
 
 
-def plotConfusionMatrix(confMatrix, classes, normalize=False):
-
+def plot_confusion_matrix(conf_matrix, classes, normalize=False):
     plt.figure()
-    plt.imshow(confMatrix, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.imshow(conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title('Confusion matrix')
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
     plt.yticks(tick_marks, classes)
 
-
     if normalize:
-        confMatrix = confMatrix.astype('float') / confMatrix.sum(axis=1)[:, np.newaxis]
-        confMatrix = np.around(confMatrix, 2)
+        conf_matrix = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+        conf_matrix = np.around(conf_matrix, 2)
         print("Normalized confusion matrix")
     else:
         print('Confusion matrix, without normalization')
 
-    print(confMatrix)
+    print(conf_matrix)
 
-    thresh = confMatrix.max() / 2.
-    for i, j in itertools.product(range(confMatrix.shape[0]), range(confMatrix.shape[1])):
-        plt.text(j, i, confMatrix[i, j], horizontalalignment = "center", color = "white" if (confMatrix[i, j] > thresh) else "black")
+    thresh = conf_matrix.max() / 2.
+    for i, j in itertools.product(range(conf_matrix.shape[0]), range(conf_matrix.shape[1])):
+        plt.text(j, i, conf_matrix[i, j], horizontalalignment="center",
+                 color="white" if (conf_matrix[i, j] > thresh) else "black")
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
