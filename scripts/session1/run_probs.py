@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_sift_30_svm')
+    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_sift_30_svm_pca23',dim_reduction=23)
 
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # Plot normalized confusion matrix
     plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
 
-    io.save_object(conf, 'final_sift_30_cm')
+    io.save_object(conf, 'final_sift_30_pca23_cm')
 
     # Show results and timing
     print('\nACCURACY: {:.2f}'.format(accuracy))
