@@ -10,7 +10,7 @@ import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 from mlcv.plotting import plot_confusion_matrix
-from mlcv.utilities import load_models
+
 
 
 """ CONSTANTS """
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_sift_all_svm')
+    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, dim_reduction=23, model_name='final_sift_all_svmPCA')
 
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
@@ -73,9 +73,9 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    #plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
+    plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
 
-    io.save_object(conf, 'final_sift_all_cm')
+    io.save_object(conf, 'final_sift_all_cmPCA')
 
     # Show results and timing
     print('\nACCURACY: {:.2f}'.format(accuracy))

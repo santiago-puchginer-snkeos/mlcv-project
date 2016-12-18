@@ -74,10 +74,8 @@ def plot_confusion_matrix(conf_matrix, classes, normalize=False):
 
     print(conf_matrix)
 
-    thresh = conf_matrix.max() / 2.
     for i, j in itertools.product(range(conf_matrix.shape[0]), range(conf_matrix.shape[1])):
-        plt.text(j, i, conf_matrix[i, j], horizontalalignment="center",
-                 color="white" if (conf_matrix[i, j] > thresh) else "black")
+        plt.text(j, i, conf_matrix[i, j], horizontalalignment = "center", color = "white" if (conf_matrix[i, j] == conf_matrix[i].max()) else "black")
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
