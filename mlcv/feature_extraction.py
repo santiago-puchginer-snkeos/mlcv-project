@@ -44,19 +44,19 @@ def compute_sift(ind, filename, label, **kwargs):
     return des, label, ind
 
 
-def parallel_sift(list_images_filenames, list_images_labels, num_samples_classes=-1, n_jobs=4, **kwargs):
+def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=-1, n_jobs=4, **kwargs):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
 
-    if num_samples_classes > 0:
+    if num_samples_class > 0:
         iterable_images = []
         iterable_labels_images = []
         for l in np.unique(list_images_labels):
             selection = [list_images_filenames[i] for i in range(len(list_images_filenames)) if
                          list_images_labels[i] == l]
-            iterable_images += selection[:num_samples_classes]
-            iterable_labels_images += [l] * num_samples_classes
+            iterable_images += selection[:num_samples_class]
+            iterable_labels_images += [l] * num_samples_class
         list_images_filenames = iterable_images
         list_images_labels = iterable_labels_images
 
@@ -130,19 +130,19 @@ def compute_surf(ind, filename, label, **kwargs):
     return des, label, ind
 
 
-def parallel_surf(list_images_filenames, list_images_labels, num_samples_classes=-1, n_jobs=4, **kwargs):
+def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=-1, n_jobs=4, **kwargs):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
 
-    if num_samples_classes > 0:
+    if num_samples_class > 0:
         iterable_images = []
         iterable_labels_images = []
         for l in np.unique(list_images_labels):
             selection = [list_images_filenames[i] for i in range(len(list_images_filenames)) if
                          list_images_labels[i] == l]
-            iterable_images += selection[:num_samples_classes]
-            iterable_labels_images += [l] * num_samples_classes
+            iterable_images += selection[:num_samples_class]
+            iterable_labels_images += [l] * num_samples_class
         list_images_filenames = iterable_images
         list_images_labels = iterable_labels_images
 

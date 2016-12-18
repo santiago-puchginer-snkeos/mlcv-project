@@ -7,7 +7,7 @@ import numpy as np
 
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
-import mlcv.io as io
+import mlcv.input_output as io
 
 """ CONSTANTS """
 N_JOBS = 6

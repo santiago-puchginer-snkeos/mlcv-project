@@ -44,10 +44,21 @@ def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scale
     return clf, std_scaler, pca
 
 
-def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, model_name=None):
-    # Standardize the data before classification
-    std_scaler = preprocessing.StandardScaler().fit(X)
-    X_std = std_scaler.transform(X)
+def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, standardize=True, dim_reduction=None,
+                   save_scaler=False, save_pca=False, model_name=None):
+    # PCA for dimensionality reduction if necessary
+    pca = decomposition.PCA(n_components=dim_reduction)
+    if dim_reduction is not None and dim_reduction > 0:
+        pca.fit(X)
+        X = pca.transform(X)
+
+    # Standardize the data before classification if necessary
+    std_scaler = preprocessing.StandardScaler()
+    if standardize:
+        std_scaler.fit(X)
+        X_std = std_scaler.transform(X)
+    else:
+        X_std = X
 
     # Instance of SVM classifier
     clf = svm.SVC(kernel='poly', C=C, degree=degree, gamma=gamma, coef0=coef0)
@@ -63,17 +74,35 @@ def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, model_name=None
     else:
         clf.fit(X_std, y)
 
-    return clf, std_scaler
+    if save_scaler:
+        io.save_object(std_scaler, save_scaler)
+
+    if save_pca:
+        io.save_object(pca, save_pca)
+
+    return clf, std_scaler, pca
 
 
-def train_rbf_svm(X, y, C=1, gamma='auto', model_name=None):
-    # Standardize the data before classification
-    std_scaler = preprocessing.StandardScaler().fit(X)
-    X_std = std_scaler.transform(X)
+def train_rbf_svm(X, y, C=1, gamma='auto', standardize=True, dim_reduction=None,
+                  save_scaler=False, save_pca=False, model_name=None):
+    # PCA for dimensionality reduction if necessary
+    pca = decomposition.PCA(n_components=dim_reduction)
+    if dim_reduction is not None and dim_reduction > 0:
+        pca.fit(X)
+        X = pca.transform(X)
+
+    # Standardize the data before classification if necessary
+    std_scaler = preprocessing.StandardScaler()
+    if standardize:
+        std_scaler.fit(X)
+        X_std = std_scaler.transform(X)
+    else:
+        X_std = X
+
     clf = svm.SVC(kernel='rbf', C=C, gamma=gamma)
 
     if model_name is not None:
-    # Instance of SVM classifier
+        # Instance of SVM classifier
         # Try to load a previously trained model
         try:
             clf = io.load_object(model_name)
@@ -84,16 +113,35 @@ def train_rbf_svm(X, y, C=1, gamma='auto', model_name=None):
     else:
         clf.fit(X_std, y)
 
-    return clf, std_scaler
+    if save_scaler:
+        io.save_object(std_scaler, save_scaler)
 
-def train_sigmoid_svm(X, y, C=1, gamma='auto',coef0=0.0, model_name=None):
-    # Standardize the data before classification
-    std_scaler = preprocessing.StandardScaler().fit(X)
-    X_std = std_scaler.transform(X)
-    clf = svm.SVC(kernel='sigmoid', C=C, gamma=gamma,coef0=coef0)
+    if save_pca:
+        io.save_object(pca, save_pca)
+
+    return clf, std_scaler, pca
+
+
+def train_sigmoid_svm(X, y, C=1, gamma='auto', coef0=0.0, standardize=True, dim_reduction=None,
+                      save_scaler=False, save_pca=False, model_name=None):
+    # PCA for dimensionality reduction if necessary
+    pca = decomposition.PCA(n_components=dim_reduction)
+    if dim_reduction is not None and dim_reduction > 0:
+        pca.fit(X)
+        X = pca.transform(X)
+
+    # Standardize the data before classification if necessary
+    std_scaler = preprocessing.StandardScaler()
+    if standardize:
+        std_scaler.fit(X)
+        X_std = std_scaler.transform(X)
+    else:
+        X_std = X
+
+    clf = svm.SVC(kernel='sigmoid', C=C, gamma=gamma, coef0=coef0)
 
     if model_name is not None:
-    # Instance of SVM classifier
+        # Instance of SVM classifier
         # Try to load a previously trained model
         try:
             clf = io.load_object(model_name)
@@ -104,8 +152,13 @@ def train_sigmoid_svm(X, y, C=1, gamma='auto',coef0=0.0, model_name=None):
     else:
         clf.fit(X_std, y)
 
+    if save_scaler:
+        io.save_object(std_scaler, save_scaler)
 
-    return clf, std_scaler
+    if save_pca:
+        io.save_object(pca, save_pca)
+
+    return clf, std_scaler, pca
 
 
 def predict_svm(X, svm, std_scaler=None, pca=None):

@@ -5,11 +5,9 @@ import time
 import joblib
 import numpy as np
 
-import mlcv.input_output as io
-import mlcv.feature_extraction as feature_extraction
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
-import mlcv.io as io
+import mlcv.input_output as io
 
 """ CONSTANTS """
 N_JOBS = 6
@@ -26,7 +24,6 @@ def parallel_testing(test_image, test_label, lin_svm, std_scaler):
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
-
     start = time.time()
 
     # Read the training set
