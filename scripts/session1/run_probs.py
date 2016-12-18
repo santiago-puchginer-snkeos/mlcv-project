@@ -46,8 +46,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    #lin_svm, std_scaler, pca = classification.train_linear_svm(D, L, C=1, model_name='SVM23linear_prob')
-    [pca, std_scaler, lin_svm] = load_models('pca23', 'scaler23_prob', 'SVM23linear_prob')
+    lin_svm, std_scaler, pca = classification.train_linear_svm(D, L, C=1, model_name='SVM23linear_prob')
 
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
@@ -75,7 +74,7 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
+    #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
 
     io.save_object(conf, 'confusionMatrix')
 
