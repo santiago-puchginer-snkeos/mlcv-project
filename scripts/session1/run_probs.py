@@ -10,6 +10,7 @@ import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 from mlcv.plotting import plotConfusionMatrix
+from mlcv.utilities import load_models
 
 
 """ CONSTANTS """
@@ -17,11 +18,14 @@ N_JOBS = 6
 
 
 def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
+    probs = [0,0,0,0,0,0,0,0]
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.sift(gray)
-    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca)
-    values, counts = np.unique(predictions, return_counts=True)
-    predicted_class = values[np.argmax(counts)]
+    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
+    for j in range(0, len(predictions)):
+        probs = probs + predictions[j]
+    predicted_class = lin_svm.classes_[np.argmax(probs)]
+
     return predicted_class == test_label, predicted_class, test_label
 
 
@@ -42,13 +46,9 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, pca = classification.train_linear_svm(D,
-                                                               L,
-                                                               dim_reduction=20,
-                                                               save_pca='pca_sift_20',
-                                                               save_scaler='scaler_sift',
-                                                               model_name='linsvm_sift_30s_20comp'
-                                                               )
+    #lin_svm, std_scaler, pca = classification.train_linear_svm(D, L, C=1, model_name='SVM23linear_prob')
+    [pca, std_scaler, lin_svm] = load_models('pca23', 'scaler23_prob', 'SVM23linear_prob')
+
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
-    #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
+    plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
 
     io.save_object(conf, 'confusionMatrix')
 
