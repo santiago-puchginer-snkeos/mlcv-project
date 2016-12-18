@@ -10,7 +10,6 @@ import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 from mlcv.plotting import plotConfusionMatrix
-from mlcv.utilities import load_models
 
 
 """ CONSTANTS """
@@ -18,14 +17,11 @@ N_JOBS = 6
 
 
 def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
-    probs = [0,0,0,0,0,0,0,0]
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.sift(gray)
-    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca, probability=True)
-    for j in range(0, len(predictions)):
-        probs = probs + predictions[j]
-    predicted_class = lin_svm.classes_[np.argmax(probs)]
-
+    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca)
+    values, counts = np.unique(predictions, return_counts=True)
+    predicted_class = values[np.argmax(counts)]
     return predicted_class == test_label, predicted_class, test_label
 
 
@@ -39,15 +35,14 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=30,
+    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels,
                                                n_jobs=N_JOBS)
     print('Time spend: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_sift_30_svm')
-
+    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_noprob_sift_all_svm')
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -76,7 +71,7 @@ if __name__ == '__main__':
     # Plot normalized confusion matrix
     #plotConfusionMatrix(conf, classes=lin_svm.classes_, normalize=True)
 
-    io.save_object(conf, 'final_sift_30_cm')
+    io.save_object(conf, 'final_noprob_sift_all_cm')
 
     # Show results and timing
     print('\nACCURACY: {:.2f}'.format(accuracy))
