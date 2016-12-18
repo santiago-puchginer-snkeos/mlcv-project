@@ -7,7 +7,7 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 import mlcv.input_output as io
-
+import itertools
 
 def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSVM_poly.pickle'
     results = []
@@ -62,6 +62,30 @@ def plotSVMparam(filename, mode='2d', name='default'):  # filename='../ResultsSV
     plt.show()
 
 
-def plotConfusionMatrix(confMatrix, classes, normalize):
-    print 'hello Im still not implemented'
+def plotConfusionMatrix(confMatrix, classes, normalize=False):
 
+    plt.figure()
+    plt.imshow(confMatrix, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+
+    if normalize:
+        confMatrix = confMatrix.astype('float') / confMatrix.sum(axis=1)[:, np.newaxis]
+        confMatrix = np.around(confMatrix, 2)
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(confMatrix)
+
+    thresh = confMatrix.max() / 2.
+    for i, j in itertools.product(range(confMatrix.shape[0]), range(confMatrix.shape[1])):
+        plt.text(j, i, confMatrix[i, j], horizontalalignment = "center", color = "white" if (confMatrix[i, j] > thresh) else "black")
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
