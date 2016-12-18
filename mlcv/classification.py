@@ -22,7 +22,7 @@ def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scale
         X_std = X
 
     # Instance of SVM classifier
-    clf = svm.LinearSVC(C=C, max_iter=5000, tol=1e-4) if liblinear else svm.SVC(kernel='linear', C=C)
+    clf = svm.LinearSVC(C=C, max_iter=5000, tol=1e-4) if liblinear else svm.SVC(kernel='linear', C=C, probability=True)
 
     if model_name is not None:
         # Try to load a previously trained model
@@ -99,7 +99,7 @@ def train_rbf_svm(X, y, C=1, gamma='auto', standardize=True, dim_reduction=None,
     else:
         X_std = X
 
-    clf = svm.SVC(kernel='rbf', C=C, gamma=gamma)
+    clf = svm.SVC(kernel='rbf', C=C, gamma=gamma, probability=True)
 
     if model_name is not None:
         # Instance of SVM classifier
@@ -161,7 +161,7 @@ def train_sigmoid_svm(X, y, C=1, gamma='auto', coef0=0.0, standardize=True, dim_
     return clf, std_scaler, pca
 
 
-def predict_svm(X, svm, std_scaler=None, pca=None):
+def predict_svm(X, svm, std_scaler=None, pca=None, probability=False):
     # Apply PCA if available
     if pca is not None:
         X = pca.transform(X)
@@ -173,4 +173,9 @@ def predict_svm(X, svm, std_scaler=None, pca=None):
         X_std = std_scaler.transform(X)
 
     # Predict the labels
-    return svm.predict(X_std)
+    if probability is False:
+        return svm.predict(X_std)
+    else:
+        return svm.predict_proba(X_std)
+
+
