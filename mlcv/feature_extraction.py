@@ -88,9 +88,9 @@ def surf(gray):
     SURF_detector = cv2.SURF(hessianThreshold=300, nOctaves=4, extended=1, upright=0)
     kpt, des = SURF_detector.compute(gray, keypoints=keypoints)
 
-    if len(kpt)>100:
-        kp = kpt[0:100]
-        desc = des[0:100, :]
+    if len(kpt)>60:
+        kp = kpt[0:60]
+        desc = des[0:60, :]
     else:
         kp=kpt
         desc=des
