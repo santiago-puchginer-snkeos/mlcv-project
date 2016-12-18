@@ -16,13 +16,16 @@ from mlcv.plotting import plotConfusionMatrix
 N_JOBS = 6
 
 
-def parallel_testing(test_image, test_label, lin_svm, std_scaler, pca):
+def parallel_testing(test_image, test_label, svm, std_scaler, pca):
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.sift(gray)
-    predictions = classification.predict_svm(des, lin_svm, std_scaler=std_scaler, pca=pca)
-    values, counts = np.unique(predictions, return_counts=True)
-    predicted_class = values[np.argmax(counts)]
-    return predicted_class == test_label, predicted_class, test_label
+    if des is not None:
+        predictions = classification.predict_svm(des, svm, std_scaler=std_scaler, pca=pca)
+        values, counts = np.unique(predictions, return_counts=True)
+        predicted_class = values[np.argmax(counts)]
+        return predicted_class == test_label
+    else:
+        return False
 
 
 """ MAIN SCRIPT"""

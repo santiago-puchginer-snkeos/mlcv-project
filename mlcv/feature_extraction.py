@@ -11,7 +11,7 @@ def sift(gray):
     return kpt, des
 
 
-def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1, **kwargs):
+def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -21,7 +21,7 @@ def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1, **
         n_samples_class = label_per_descriptor.count(label)
         if num_samples_class == -1 or n_samples_class < num_samples_class:
             grayscale = io.load_grayscale_image(filename)
-            kpt, des = sift(grayscale, **kwargs)
+            kpt, des = sift(grayscale)
             descriptors.append(des)
             label_per_descriptor.append(label)
             image_id_per_descriptor.append(i)
@@ -40,7 +40,7 @@ def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1, **
 
 def compute_sift(ind, filename, label, **kwargs):
     grayscale = io.load_grayscale_image(filename)
-    _, des = sift(grayscale, **kwargs)
+    _, des = sift(grayscale)
     return des, label, ind
 
 
@@ -83,20 +83,22 @@ def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=-
 
 
 def surf(gray):
-    SURF_detector = cv2.SURF(hessianThreshold=2000)
-    keypoints = SURF_detector.detect(gray, None)
-    SURF_detector = cv2.SURF(hessianThreshold=300, nOctaves=4, extended=1, upright=0)
-    kpt, des = SURF_detector.compute(gray, keypoints=keypoints)
+    surf_detector = cv2.SURF(hessianThreshold=2000)
+    keypoints = surf_detector.detect(gray, None)
+    surf_detector = cv2.SURF(hessianThreshold=300, nOctaves=4, extended=1, upright=0)
+    kpt, des = surf_detector.compute(gray, keypoints=keypoints)
 
-    if len(kpt)>60:
+    if len(kpt) > 60:
         kp = kpt[0:60]
         desc = des[0:60, :]
     else:
-        kp=kpt
-        desc=des
+        kp = kpt
+        desc = des
 
     return kp, desc
-def seq_surf(list_images_filenames, list_images_labels, num_samples_class=-1, **kwargs):
+
+
+def seq_surf(list_images_filenames, list_images_labels, num_samples_class=-1):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -106,7 +108,7 @@ def seq_surf(list_images_filenames, list_images_labels, num_samples_class=-1, **
         n_samples_class = label_per_descriptor.count(label)
         if num_samples_class == -1 or n_samples_class < num_samples_class:
             grayscale = io.load_grayscale_image(filename)
-            kpt, des = surf(grayscale, **kwargs)
+            kpt, des = surf(grayscale)
             descriptors.append(des)
             label_per_descriptor.append(label)
             image_id_per_descriptor.append(i)
@@ -119,14 +121,15 @@ def seq_surf(list_images_filenames, list_images_labels, num_samples_class=-1, **
         if not descriptors[i] is None:
             descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
             labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
-            indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
+            indices_matrix = np.hstack(
+                (indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
     return descriptors_matrix, labels_matrix, indices_matrix
 
 
-def compute_surf(ind, filename, label, **kwargs):
+def compute_surf(ind, filename, label):
     grayscale = io.load_grayscale_image(filename)
-    _, des = surf(grayscale, **kwargs)
+    _, des = surf(grayscale)
     return des, label, ind
 
 
@@ -152,9 +155,10 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=-
     )
 
     for des, label, ind in res:
-        descriptors.append(des)
-        label_per_descriptor.append(label)
-        image_id_per_descriptor.append(ind)
+        if des is not None:
+            descriptors.append(des)
+            label_per_descriptor.append(label)
+            image_id_per_descriptor.append(ind)
 
     # Transform the descriptors and the labels to numpy arrays
     descriptors_matrix = descriptors[0]
@@ -166,7 +170,6 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=-
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
     return descriptors_matrix, labels_matrix, indices_matrix
-
 
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
