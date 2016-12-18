@@ -5,9 +5,8 @@ import numpy as np
 import mlcv.io as io
 
 
-def sift(gray, n_features=100, sigma=1.6, contrast_threshold=0.04, edge_threshold=10):
-    sift_fe = cv2.SIFT(nfeatures=n_features, sigma=sigma, contrastThreshold=contrast_threshold,
-                       edgeThreshold=edge_threshold)
+def sift(gray):
+    sift_fe = cv2.SIFT(nfeatures=100)
     kpt, des = sift_fe.detectAndCompute(gray, None)
     return kpt, des
 
@@ -83,14 +82,20 @@ def parallel_sift(list_images_filenames, list_images_labels, num_samples_classes
     return descriptors_matrix, labels_matrix, indices_matrix
 
 
-def surf(gray, n_features=100, sigma=1.6, contrast_threshold=0.04, edge_threshold=10):
-    sift_fe = cv2.SIFT(nfeatures=n_features, sigma=sigma, contrastThreshold=contrast_threshold,
-                       edgeThreshold=edge_threshold)
-    keypoints = sift_fe.detect(gray, None)
-    surf_fe = cv2.SURF(hessianThreshold=300, nOctaves=4, extended=1, upright=1)
-    kpt, des = surf_fe.compute(gray, keypoints=keypoints)
+def surf(gray):
+    SURF_detector = cv2.SURF(hessianThreshold=2000)
+    keypoints = SURF_detector.detect(gray, None)
+    SURF_detector = cv2.SURF(hessianThreshold=300, nOctaves=4, extended=1, upright=0)
+    kpt, des = SURF_detector.compute(gray, keypoints=keypoints)
 
-    return kpt, des
+    if len(kpt)>100:
+        kp = kpt[0:100]
+        desc = des[0:100, :]
+    else:
+        kp=kpt
+        desc=des
+
+    return kp, desc
 
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
