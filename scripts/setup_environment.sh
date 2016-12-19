@@ -9,6 +9,12 @@
 # It also assumes that OpenCV 2.4.8 for Python is installed in the root of the filesystem, so that
 # the file in /opencv-2.4.8/release/lib/cv2.so actually exists
 
+#####################################################################
+## IMPORTANT: THIS SCRIPT MUST BE RUN FROM THE ROOT OF THE PROJECT ##
+#####################################################################
+
+CURRENT_DIR=$(pwd)
+
 # Local installation of Python 2.7.12
 mkdir ~/python && cd ~/python
 wget http://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz
@@ -26,7 +32,8 @@ virtualenv --python=$HOME/python/bin/python mlcv
 
 # Activate virtualenv and install dependencies in requirements.txt
 source ~/virtualenvs/mlcv/bin/activate
-pip install -r ././../requirements.txt
+cd ${CURRENT_DIR}
+pip install -r ./requirements.txt
 
 # Copy cv2 dependency
 cp /opencv-2.4.8/release/lib/cv2.so ~/virtualenvs/mlcv/lib/python2.7/site-packages/cv2.so
