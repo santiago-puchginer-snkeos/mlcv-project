@@ -5,7 +5,7 @@ import sklearn.svm as svm
 import mlcv.input_output as io
 
 
-def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=None, save_scaler=False, save_pca=False,
+def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=23, save_scaler=False, save_pca=False,
                      model_name=None, liblinear=False):
     # PCA for dimensionality reduction if necessary
     pca = None
@@ -87,7 +87,7 @@ def train_poly_svm(X, y, C=1, degree=3, gamma='auto', coef0=0.0, standardize=Tru
     return clf, std_scaler, pca
 
 
-def train_rbf_svm(X, y, C=1, gamma='auto', standardize=True, dim_reduction=None,
+def train_rbf_svm(X, y, C=5, gamma=0.1, standardize=True, dim_reduction=23,
                   save_scaler=False, save_pca=False, model_name=None):
     # PCA for dimensionality reduction if necessary
     pca = None
