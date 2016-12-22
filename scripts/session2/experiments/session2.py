@@ -55,7 +55,7 @@ init = time.time()
 codebook = cluster.MiniBatchKMeans(n_clusters=k, verbose=False, batch_size=k * 20, compute_labels=False,
                                    reassignment_ratio=10 ** -4)
 codebook.fit(D)
-cPickle.dump(codebook, open("codebook.dat", "wb"))
+cPickle.dump(codebook, open("std_codebook.dat", "wb"))
 end = time.time()
 print 'Done in ' + str(end - init) + ' secs.'
 
