@@ -75,7 +75,7 @@ def load_object(model_name):
     :param model_name: Name of the model to be loaded
     :type model_name: basestring
     :return: The object associated with loaded model
-    :rtype: object
+    :rtype: object, list
     """
     filepath = os.path.join(MODELS_PATH, '{}.pickle'.format(model_name))
     try:

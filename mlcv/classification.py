@@ -169,7 +169,7 @@ def train_sigmoid_svm(X, y, C=1, gamma='auto', coef0=0.0, standardize=True, dim_
     return clf, std_scaler, pca
 
 
-def predict_svm(X, svm, std_scaler=None, pca=None, probability=False):
+def predict_svm(X, svm, std_scaler=None, pca=None, probability=True):
     # Apply PCA if available
     if pca is not None:
         X = pca.transform(X)
