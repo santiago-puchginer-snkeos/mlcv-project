@@ -68,15 +68,32 @@ def plot_confusion_matrix(conf_matrix, classes, normalize=False):
     if normalize:
         conf_matrix = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
         conf_matrix = np.around(conf_matrix, 2)
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(conf_matrix)
 
     for i, j in itertools.product(range(conf_matrix.shape[0]), range(conf_matrix.shape[1])):
-        plt.text(j, i, conf_matrix[i, j], horizontalalignment = "center", color = "white" if (conf_matrix[i, j] == conf_matrix[i].max()) else "black")
+        plt.text(j, i, conf_matrix[i, j], horizontalalignment="center",
+                 color="white" if (conf_matrix[i, j] == conf_matrix[i].max()) else "black")
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.show()
+
+
+def plot_roc_curve(false_pos_rate, true_pos_rate, auc_scores, classes, title=''):
+    # Variables
+    colors = itertools.cycle(
+        ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
+    )
+    lw = 2
+
+    # Plotting
+    plt.figure()
+    for i, color in zip(range(len(classes)), colors):
+        label = '{} (AUC: {:.3f})'.format(classes[i], auc_scores[i])
+        plt.plot(false_pos_rate[i], true_pos_rate[i], color=color, lw=lw, label=label)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.0])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(title)
+    plt.legend(loc="lower right")
     plt.show()

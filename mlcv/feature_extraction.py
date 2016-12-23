@@ -5,13 +5,13 @@ import numpy as np
 import mlcv.input_output as io
 
 
-def sift(gray):
-    sift_fe = cv2.SIFT(nfeatures=100)
+def sift(gray, n_features=100):
+    sift_fe = cv2.SIFT(nfeatures=n_features)
     kpt, des = sift_fe.detectAndCompute(gray, None)
     return kpt, des
 
 
-def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1):
+def seq_sift(list_images_filenames, list_images_labels, num_samples_class=30):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -38,13 +38,13 @@ def seq_sift(list_images_filenames, list_images_labels, num_samples_class=-1):
     return descriptors_matrix, labels_matrix, indices_matrix
 
 
-def compute_sift(ind, filename, label, **kwargs):
+def compute_sift(ind, filename, label):
     grayscale = io.load_grayscale_image(filename)
     _, des = sift(grayscale)
     return des, label, ind
 
 
-def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=-1, n_jobs=4, **kwargs):
+def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=30, n_jobs=4, **kwargs):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -133,7 +133,7 @@ def compute_surf(ind, filename, label):
     return des, label, ind
 
 
-def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=-1, n_jobs=4, **kwargs):
+def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=30, n_jobs=4, **kwargs):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
