@@ -5,6 +5,7 @@ import time
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 
 import mlcv.bovw as bovw
 import mlcv.feature_extraction as feature_extraction
@@ -38,7 +39,7 @@ if __name__ == '__main__':
 
     # Start hyperparameters optimization
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
-    codebook_k_values = [2 ** i for i in range(6, 16)]
+    codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
         'C': np.logspace(-1, 3, 10 ** 6)
     }
@@ -61,7 +62,12 @@ if __name__ == '__main__':
         print('Time spend: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
-        # Optimizing SVM hyperparameters
+        print('Scaling features...')
+        std_scaler = StandardScaler().fit(vis_words)
+        vis_words = std_scaler.transform(vis_words)
+        print('Time spend: {:.2f} s'.format(time.time() - temp))
+        temp = time.time()
+
         print('Optimizing SVM hyperparameters...')
         svm = SVC(kernel='linear')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
