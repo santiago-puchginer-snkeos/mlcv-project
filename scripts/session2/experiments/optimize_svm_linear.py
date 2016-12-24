@@ -11,7 +11,7 @@ import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 
 """ CONSTANTS """
-N_JOBS = 4
+N_JOBS = 8
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     # Start hyperparameters optimization
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
-    codebook_k_values = [2 ** i for i in range(8, 16)]
+    codebook_k_values = [2 ** i for i in range(6, 16)]
     params_distribution = {
         'C': np.logspace(-1, 3, 10 ** 6)
     }
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     for k in codebook_k_values:
         temp = time.time()
         print('Creating codebook with {} visual words'.format(k))
-        D.astype(np.float64, copy=False)
+        D = D.astype(np.uint32)
         codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}'.format(k))
         print('Time spend: {:.2f} s'.format(time.time() - temp))
         temp = time.time()

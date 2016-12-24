@@ -106,7 +106,7 @@ if __name__ == '__main__':
     tpr = []
     roc_auc = []
     for i in range(len(classes)):
-        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], pred_prob[:, i])
+        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(pred_prob)[:, i])
         c_roc_auc = auc(c_fpr, c_tpr)
         fpr.append(c_fpr)
         tpr.append(c_tpr)
