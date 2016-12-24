@@ -46,7 +46,7 @@ if __name__ == '__main__':
     except IOError:
         D, L, I = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors')
+        io.save_object(D, 'train_sift_des')
         io.save_object(L, 'train_sift_labels')
         io.save_object(I, 'train_sift_indices')
 
@@ -65,6 +65,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
+    # TODO: Add SVM with intercept kernel
     lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()

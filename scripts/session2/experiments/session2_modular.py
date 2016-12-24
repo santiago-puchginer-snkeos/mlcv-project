@@ -43,7 +43,7 @@ if __name__ == '__main__':
                   io.load_object('train_sift_indices')
     except IOError:
         D, L, I = feature_extraction.seq_sift(train_images_filenames, train_labels, num_samples_class=-1)
-        io.save_object(D, 'train_sift_des')
+        io.save_object(D, 'train_sift_descriptors')
         io.save_object(L, 'train_sift_labels')
         io.save_object(I, 'train_sift_indices')
 
