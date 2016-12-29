@@ -98,12 +98,19 @@ def train():
 
 
 def plot_curve():
+    print('Loading results object...')
     res = io.load_object('linear_svm_optimization')
+
+    print('Plotting...')
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
     plt.figure()
-    for k in res:
+    # Compute subplot parameters
+    num_subplots = len(res)
+    num_rows = np.ceil(num_subplots / 2)
+    # All subplots
+    for ind, k in enumerate(sorted(res.keys())):
         results = res[k]
         x = results['param_C']
         y = results['mean_test_score']
@@ -113,13 +120,13 @@ def plot_curve():
         y_sorted = np.asarray(y[sorted_indices], dtype=np.float64)
         e_sorted = np.asarray(e[sorted_indices], dtype=np.float64)
         color = colors.next()
-        plt.errorbar(x_sorted, y_sorted, e_sorted, label='{} visual words'.format(k), color=color)
-
-    plt.legend()
-    plt.title('Optimization of C for Linear SVM')
-    plt.xlabel('C')
-    plt.ylabel('Accuracy')
+        ax = plt.subplot(num_rows, 2, ind+1)
+        ax.set_xscale("log")
+        ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
+        ax.set_title('{} visual words'.format(k))
+        ax.set_ylim((0.25, 0.6))
     plt.show()
+    plt.close()
 
 
 """ MAIN SCRIPT"""
