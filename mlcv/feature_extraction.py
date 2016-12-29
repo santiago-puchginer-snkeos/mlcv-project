@@ -171,6 +171,85 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=3
 
     return descriptors_matrix, labels_matrix, indices_matrix
 
+def dense(gray):
+    dense=cv2.FeatureDetector_create("Dense")
+    kp=dense.detect(gray)
+    sift_detector=cv2.SIFT()
+    kp,des=sift_detector.compute(gray,kp)
+    return kp, des
+
+def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
+    descriptors = []
+    label_per_descriptor = []
+    image_id_per_descriptor = []
+
+    for i, (filename, label) in enumerate(zip(list_images_filenames, list_images_labels)):
+        # Check if we have limited the number of samples per class (not -1), and if so, only allow num_samples_class
+        n_samples_class = label_per_descriptor.count(label)
+        if num_samples_class == -1 or n_samples_class < num_samples_class:
+            grayscale = io.load_grayscale_image(filename)
+            kpt, des = dense(grayscale)
+            descriptors.append(des)
+            label_per_descriptor.append(label)
+            image_id_per_descriptor.append(i)
+
+    # Transform the descriptors and the labels to numpy arrays
+    descriptors_matrix = descriptors[0]
+    labels_matrix = np.array([label_per_descriptor[0]] * descriptors[0].shape[0])
+    indices_matrix = np.array([image_id_per_descriptor[0]] * descriptors[0].shape[0])
+    for i in range(1, len(descriptors)):
+        if not descriptors[i] is None:
+            descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
+            labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
+            indices_matrix = np.hstack(
+                (indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
+
+    return descriptors_matrix, labels_matrix, indices_matrix
+
+
+def compute_dense(ind, filename, label):
+    grayscale = io.load_grayscale_image(filename)
+    _, des = dense(grayscale)
+    return des, label, ind
+
+
+def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=30, n_jobs=4, **kwargs):
+    descriptors = []
+    label_per_descriptor = []
+    image_id_per_descriptor = []
+
+    if num_samples_class > 0:
+        iterable_images = []
+        iterable_labels_images = []
+        for l in np.unique(list_images_labels):
+            selection = [list_images_filenames[i] for i in range(len(list_images_filenames)) if
+                         list_images_labels[i] == l]
+            iterable_images += selection[:num_samples_class]
+            iterable_labels_images += [l] * num_samples_class
+        list_images_filenames = iterable_images
+        list_images_labels = iterable_labels_images
+
+    res = joblib.Parallel(n_jobs=n_jobs, backend='threading')(
+        joblib.delayed(compute_dense)(i, filename, label, **kwargs) for i, (filename, label) in
+        enumerate(zip(list_images_filenames, list_images_labels))
+    )
+
+    for des, label, ind in res:
+        if des is not None:
+            descriptors.append(des)
+            label_per_descriptor.append(label)
+            image_id_per_descriptor.append(ind)
+
+    # Transform the descriptors and the labels to numpy arrays
+    descriptors_matrix = descriptors[0]
+    labels_matrix = np.array([label_per_descriptor[0]] * descriptors[0].shape[0])
+    indices_matrix = np.array([image_id_per_descriptor[0]] * descriptors[0].shape[0])
+    for i in range(1, len(descriptors)):
+        descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
+        labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
+        indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
+
+    return descriptors_matrix, labels_matrix, indices_matrix
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
     orb_fe = cv2.ORB(nfeatures=n_features, nlevels=levels, edgeThreshold=edge_threshold, WTA_K=wtak)
