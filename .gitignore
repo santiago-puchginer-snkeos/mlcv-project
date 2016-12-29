@@ -12,6 +12,9 @@ dataset/MIT_split/
 *.pickle
 !models/*.pickle
 
+# Ignore folder
+ignore/
+
 ######################
 ### PYTHON RELATED ###
 ######################

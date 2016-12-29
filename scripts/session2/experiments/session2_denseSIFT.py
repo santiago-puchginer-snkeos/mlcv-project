@@ -1,7 +1,5 @@
 from __future__ import print_function, division
-import sys
 
-sys.path.insert(0, './')
 import time
 
 import joblib
@@ -17,7 +15,7 @@ import mlcv.plotting as plotting
 
 """ CONSTANTS """
 N_JOBS = 4
-K = 2048
+K = 512
 
 
 def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
@@ -42,33 +40,33 @@ if __name__ == '__main__':
     # Feature extraction with sift
     print('Obtaining dense sift features...')
     try:
-        D, L, I = io.load_object('train_dense_descriptors'), \
-                  io.load_object('train_dense_labels'), \
-                  io.load_object('train_dense_indices')
+        D, L, I = io.load_object('train_dense_descriptors', ignore=True), \
+                  io.load_object('train_dense_labels', ignore=True), \
+                  io.load_object('train_dense_indices', ignore=True)
     except IOError:
         D, L, I = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
-                                                   n_jobs=N_JOBS)
-        io.save_object(D, 'train_dense_des')
-        io.save_object(L, 'train_dense_labels')
-        io.save_object(I, 'train_dense_indices')
+                                                    n_jobs=N_JOBS)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
 
-    print('Time spend: {:.2f} s'.format(time.time() - start))
+    print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
     print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_codebook(D, k=K, codebook_name='default_codebook')
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
+    codebook = bovw.create_codebook(D, k=K, codebook_name='dense_codebook')
+    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     print('Getting visual words from training set...')
     vis_words, labels = bovw.visual_words(D, L, I, codebook)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
+    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
     lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
+    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Read the test set
@@ -87,7 +85,7 @@ if __name__ == '__main__':
     pred_prob = [x[2] for x in test_results]
 
     num_correct = np.count_nonzero(pred_results)
-    print('Time spend: {:.2f} s'.format(time.time() - temp))
+    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Compute accuracy
@@ -108,7 +106,7 @@ if __name__ == '__main__':
     tpr = []
     roc_auc = []
     for i in range(len(classes)):
-        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], pred_prob[:, i])
+        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(pred_prob)[:, i])
         c_roc_auc = auc(c_fpr, c_tpr)
         fpr.append(c_fpr)
         tpr.append(c_tpr)

@@ -47,7 +47,7 @@ startingpoint = 0
 for i in range(len(Train_descriptors)):
     D[startingpoint:startingpoint + len(Train_descriptors[i])] = Train_descriptors[i]
     startingpoint += len(Train_descriptors[i])
-print('Time spend: {:.2f} s'.format(time.time() - start))
+print('Elapsed time: {:.2f} s'.format(time.time() - start))
 temp = time.time()
 
 
@@ -59,7 +59,7 @@ codebook = cluster.MiniBatchKMeans(n_clusters=k, verbose=False, batch_size=k * 2
 codebook.fit(D)
 cPickle.dump(codebook, open("std_codebook.dat", "wb"))
 end = time.time()
-print('Time spend: {:.2f} s'.format(time.time() - temp))
+print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
 print('Getting visual words from descriptors...')
@@ -67,7 +67,7 @@ visual_words = np.zeros((len(Train_descriptors), k), dtype=np.float32)
 for i in xrange(len(Train_descriptors)):
     words = codebook.predict(Train_descriptors[i])
     visual_words[i, :] = np.bincount(words, minlength=k)
-print('Time spend: {:.2f} s'.format(time.time() - temp))
+print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
 # Train a linear SVM classifier
@@ -76,7 +76,7 @@ D_scaled = stdSlr.transform(visual_words)
 print 'Training the SVM classifier...'
 clf = svm.SVC(kernel='linear', C=1).fit(D_scaled, train_labels)
 print 'Done!'
-print('Time spend: {:.2f} s'.format(time.time() - temp))
+print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
 # get all the test data and predict their labels
@@ -89,7 +89,7 @@ for i in range(len(test_images_filenames)):
     kpt, des = SIFTdetector.detectAndCompute(gray, None)
     words = codebook.predict(des)
     visual_words_test[i, :] = np.bincount(words, minlength=k)
-print('Time spend: {:.2f} s'.format(time.time() - temp))
+print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 temp = time.time()
 
 accuracy = 100 * clf.score(stdSlr.transform(visual_words_test), test_labels)

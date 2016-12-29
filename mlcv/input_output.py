@@ -9,6 +9,7 @@ except ImportError:
 
 DATASET_PATH = './dataset'
 MODELS_PATH = './models'
+IGNORE_PATH = './ignore'
 
 
 def load_training_set():
@@ -52,14 +53,19 @@ def load_grayscale_image(image):
     return cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
 
 
-def save_object(obj, model_name):
+def save_object(obj, model_name, ignore=False):
     """
     Saves an object to disk
 
     :param obj: The object to be saved
+    :type obj: object
     :param model_name: Name of the object to be saved
+    :type model_name: basestring
+    :param ignore: Store the object in the ignore folder
+    :type ignore: bool
     """
-    filepath = os.path.join(MODELS_PATH, '{}.pickle'.format(model_name))
+    folder = IGNORE_PATH if ignore else MODELS_PATH
+    filepath = os.path.join(folder, '{}.pickle'.format(model_name))
     try:
         import joblib
         joblib.dump(obj, filepath, compress=True)
@@ -68,16 +74,19 @@ def save_object(obj, model_name):
             pickle.dump(obj, f)
 
 
-def load_object(model_name):
+def load_object(model_name, ignore=False):
     """
     Loads an object from disk
 
     :param model_name: Name of the model to be loaded
     :type model_name: basestring
+    :param ignore: Load the object from the ignore folder
+    :type ignore: bool
     :return: The object associated with loaded model
     :rtype: object, list
     """
-    filepath = os.path.join(MODELS_PATH, '{}.pickle'.format(model_name))
+    folder = IGNORE_PATH if ignore else MODELS_PATH
+    filepath = os.path.join(folder, '{}.pickle'.format(model_name))
     try:
         import joblib
         obj = joblib.load(filepath)
