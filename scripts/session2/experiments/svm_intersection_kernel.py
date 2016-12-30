@@ -25,7 +25,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     ind = np.array([0] * des.shape[0])
     vis_word, _ = bovw.visual_words(des, labels, ind, codebook)
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
-    predicted_class = lin_svm.classes_[np.argmax(prediction_prob)]
+    predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
 
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     except IOError:
         D, L, I = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_des', ignore=True)
+        io.save_object(D, 'train_sift_descriptors', ignore=True)
         io.save_object(L, 'train_sift_labels', ignore=True)
         io.save_object(I, 'train_sift_indices', ignore=True)
 
@@ -59,14 +59,13 @@ if __name__ == '__main__':
     temp = time.time()
 
     print('Getting visual words from training set...')
-    vis_words, labels = bovw.visual_words(D, L, I, codebook)
+    vis_words, labels = bovw.visual_words(D, L, I, codebook, normalization=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    # TODO: Add SVM with intercept kernel
-    lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
+    svm, std_scaler, pca = classification.train_intersection_svm(vis_words, labels, C=1, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -77,7 +76,7 @@ if __name__ == '__main__':
     # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     test_results = joblib.Parallel(n_jobs=N_JOBS, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, codebook, lin_svm, std_scaler, pca) for
+        joblib.delayed(parallel_testing)(test_image, test_label, codebook, svm, std_scaler, pca) for
         test_image, test_label in
         zip(test_images_filenames, test_labels))
 
@@ -96,7 +95,7 @@ if __name__ == '__main__':
     print('\nACCURACY: {:.2f}'.format(accuracy))
     print('\nTOTAL TIME: {:.2f} s'.format(time.time() - start))
 
-    classes = lin_svm.classes_
+    classes = svm.classes_
 
     # Create confusion matrix
     conf = confusion_matrix(test_labels, pred_class, labels=classes)
@@ -107,7 +106,7 @@ if __name__ == '__main__':
     tpr = []
     roc_auc = []
     for i in range(len(classes)):
-        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], pred_prob[:, i])
+        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(pred_prob)[:, i])
         c_roc_auc = auc(c_fpr, c_tpr)
         fpr.append(c_fpr)
         tpr.append(c_tpr)

@@ -3,6 +3,7 @@ import sklearn.preprocessing as preprocessing
 import sklearn.svm as svm
 
 import mlcv.input_output as io
+import mlcv.kernels as kernels
 
 
 def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=23, save_scaler=False, save_pca=False,
@@ -147,6 +148,47 @@ def train_sigmoid_svm(X, y, C=1, gamma='auto', coef0=0.0, standardize=True, dim_
         X_std = X
 
     clf = svm.SVC(kernel='sigmoid', C=C, gamma=gamma, coef0=coef0, probability=True)
+
+    if model_name is not None:
+        # Instance of SVM classifier
+        # Try to load a previously trained model
+        try:
+            clf = io.load_object(model_name)
+        except (IOError, EOFError):
+            clf.fit(X_std, y)
+            # Store the model with the provided name
+            io.save_object(clf, model_name)
+    else:
+        clf.fit(X_std, y)
+
+    if save_scaler:
+        io.save_object(std_scaler, save_scaler)
+
+    if save_pca:
+        io.save_object(pca, save_pca)
+
+    return clf, std_scaler, pca
+
+
+def train_intersection_svm(X, y, C=1, standardize=True, dim_reduction=None,
+                           save_scaler=False, save_pca=False, model_name=None):
+    # PCA for dimensionality reduction if necessary
+    pca = None
+    if dim_reduction is not None and dim_reduction > 0:
+        pca = decomposition.PCA(n_components=dim_reduction)
+        pca.fit(X)
+        X = pca.transform(X)
+
+    # Standardize the data before classification if necessary
+    std_scaler = None
+    if standardize:
+        std_scaler = preprocessing.StandardScaler()
+        std_scaler.fit(X)
+        X_std = std_scaler.transform(X)
+    else:
+        X_std = X
+
+    clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True)
 
     if model_name is not None:
         # Instance of SVM classifier

@@ -23,11 +23,19 @@ def create_codebook(X, k=512, codebook_name=None, k_means_init='random'):
     return codebook
 
 
-def visual_words(X, y, descriptors_indices, codebook):
+def visual_words(X, y, descriptors_indices, codebook, normalization=None):
     k = codebook.cluster_centers_.shape[0]
     prediction = codebook.predict(X)
-    v_words = [np.bincount(prediction[descriptors_indices == i], minlength=k) for i in
-               range(0, descriptors_indices.max() + 1)]
+    v_words = np.array([np.bincount(prediction[descriptors_indices == i], minlength=k) for i in
+               range(0, descriptors_indices.max() + 1)], dtype=np.float64)
+    # Normalization
+    if normalization == 'l1':
+        vis_words = v_words / np.linalg.norm(v_words, axis=1, keepdims=True)
+    elif normalization == 'l2':
+        vis_words = v_words / np.linalg.norm(v_words, axis=1, keepdims=True) ** 2
+    else:
+        vis_words = v_words
+
     labels = [y[descriptors_indices == i][0] for i in
               range(0, descriptors_indices.max() + 1)]
-    return np.array(v_words, dtype=np.float64), np.array(labels)
+    return vis_words, np.array(labels)
