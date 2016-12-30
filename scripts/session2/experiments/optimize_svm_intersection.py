@@ -13,6 +13,7 @@ from sklearn.svm import SVC
 import mlcv.bovw as bovw
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
+import mlcv.kernels as kernels
 
 """ CONSTANTS """
 N_JOBS = 8
@@ -71,10 +72,12 @@ def train():
         temp = time.time()
 
         print('Optimizing SVM hyperparameters...')
-        svm = SVC(kernel='linear')
+        svm = SVC(kernel='precomputed')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
                                            refit=False, verbose=1)
-        random_search.fit(vis_words, labels)
+        # Precompute Gram matrix
+        gram = kernels.intersection_kernel(vis_words, vis_words)
+        random_search.fit(gram, labels)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 
         # Appending all parameter-scores combinations
@@ -93,13 +96,13 @@ def train():
     print('k={}, C={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'], best_accuracy))
 
     print('Saving all cross-validation values...')
-    io.save_object(cv_results, 'linear_svm_optimization')
+    io.save_object(cv_results, 'intersection_svm_optimization')
     print('Done')
 
 
 def plot_curve():
     print('Loading results object...')
-    res = io.load_object('linear_svm_optimization', ignore=True)
+    res = io.load_object('intersection_svm_optimization', ignore=True)
 
     print('Plotting...')
     colors = itertools.cycle(
