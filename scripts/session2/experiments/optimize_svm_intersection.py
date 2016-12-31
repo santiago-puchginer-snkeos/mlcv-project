@@ -44,7 +44,7 @@ def train():
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
-        'C': np.logspace(-1, 3, 10 ** 6)
+        'C': np.logspace(-4, 3, 10 ** 6)
     }
     n_iter = 100
     best_accuracy = 0
@@ -74,7 +74,7 @@ def train():
         print('Optimizing SVM hyperparameters...')
         svm = SVC(kernel='precomputed')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
-                                           refit=False, verbose=1)
+                                           refit=False, verbose=1, cv=4)
         # Precompute Gram matrix
         gram = kernels.intersection_kernel(vis_words, vis_words)
         random_search.fit(gram, labels)
@@ -82,7 +82,7 @@ def train():
 
         # Appending all parameter-scores combinations
         cv_results.update({k: random_search.cv_results_})
-        io.save_object(cv_results, 'linear_svm_optimization')
+        io.save_object(cv_results, 'intersection_svm_optimization')
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:

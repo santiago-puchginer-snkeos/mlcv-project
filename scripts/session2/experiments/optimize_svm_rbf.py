@@ -4,8 +4,8 @@ import time
 
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
-from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 
 import mlcv.bovw as bovw
 import mlcv.feature_extraction as feature_extraction
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
         'C': np.logspace(-1, 3, 10 ** 6),
-        'gamma' : np.logspace(0, 2, 10 ** 6)
+        'gamma': np.logspace(0, 2, 10 ** 6)
     }
     n_iter = 100
     best_accuracy = 0

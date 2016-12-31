@@ -43,7 +43,7 @@ def train():
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
-        'C': np.logspace(-1, 3, 10 ** 6)
+        'C': np.logspace(-4, 3, 10 ** 6)
     }
     n_iter = 100
     best_accuracy = 0
@@ -73,7 +73,7 @@ def train():
         print('Optimizing SVM hyperparameters...')
         svm = SVC(kernel='linear')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
-                                           refit=False, verbose=1)
+                                           refit=False, verbose=1, cv=4)
         random_search.fit(vis_words, labels)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 
