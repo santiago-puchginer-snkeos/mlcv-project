@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
-import time
 import argparse
 import itertools
-
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +17,7 @@ import mlcv.input_output as io
 """ CONSTANTS """
 N_JOBS = 8
 
+
 def train():
     start = time.time()
 
@@ -28,25 +28,23 @@ def train():
     # Feature extraction with sift
     print('Obtaining sift features...')
     try:
-        D, L, I = io.load_object('train_sift_descriptors'), \
-                  io.load_object('train_sift_labels'), \
-                  io.load_object('train_sift_indices')
+        D, L, I = io.load_object('train_sift_descriptors', ignore=True), \
+                  io.load_object('train_sift_labels', ignore=True), \
+                  io.load_object('train_sift_indices', ignore=True)
     except IOError:
         D, L, I = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors')
-        io.save_object(L, 'train_sift_labels')
-        io.save_object(I, 'train_sift_indices')
+        io.save_object(D, 'train_sift_descriptors', ignore=True)
+        io.save_object(L, 'train_sift_labels', ignore=True)
+        io.save_object(I, 'train_sift_indices', ignore=True)
     print('Time spend: {:.2f} s'.format(time.time() - start))
-    temp = time.time()
 
     # Start hyperparameters optimization
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR RBF SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
-        'C': np.logspace(-4, 3, 10 ** 6),
-        'gamma' : np.logspace(-3, 5, 10 ** 6)
-
+        'C': np.logspace(-4, 3, 10 ** 3),
+        'gamma': np.logspace(-3, 5, 10 ** 3)
     }
     n_iter = 100
     best_accuracy = 0
@@ -76,13 +74,17 @@ def train():
         print('Optimizing SVM hyperparameters...')
         svm = SVC(kernel='rbf')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
-                                           refit=False, verbose=1)
+                                           refit=False, verbose=1, cv=4)
         random_search.fit(vis_words, labels)
         print('Time spend: {:.2f} s'.format(time.time() - temp))
-        temp = time.time()
+
+        # Convert MaskedArrays to ndarrays to avoid unpickling bugs
+        results = random_search.cv_results_
+        results['param_C'] = results['param_C'].data
+        results['param_gamma'] = results['param_gamma'].data
 
         # Appending all parameter-scores combinations
-        cv_results.update({k: random_search.cv_results_})
+        cv_results.update({k: results})
         io.save_object(cv_results, 'rbf_svm_optimization')
 
         # Obtaining the parameters which yielded the best accuracy
@@ -94,14 +96,16 @@ def train():
         print('-------------------------------\n')
 
     print('\nBEST PARAMS')
-    print('k={}, C={} , gamma={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'],best_params['gamma'], best_accuracy))
+    print('k={}, C={} , gamma={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'], best_params['gamma'],
+                                                              best_accuracy))
 
     print('Saving all cross-validation values...')
     io.save_object(cv_results, 'rbf_svm_optimization')
     print('Done')
 
+
 def plot_curve():
-    res = io.load_object('rbf_svm_optimization')
+    res = io.load_object('rbf_svm_optimization', ignore=True)
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
@@ -128,7 +132,7 @@ def plot_curve():
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('type', default='plot', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 

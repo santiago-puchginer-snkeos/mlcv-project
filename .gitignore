@@ -108,4 +108,3 @@ ENV/
 
 # Rope project settings
 .ropeproject
-*.pickle
