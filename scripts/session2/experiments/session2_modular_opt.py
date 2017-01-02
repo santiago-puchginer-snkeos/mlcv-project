@@ -25,7 +25,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     ind = np.array([0] * des.shape[0])
     vis_word, _ = bovw.visual_words(des, labels, ind, codebook)
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
-    predicted_class = lin_svm.classes_[np.argmax(prediction_prob)]
+    predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
 
 

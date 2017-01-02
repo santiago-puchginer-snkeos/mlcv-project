@@ -43,7 +43,7 @@ def train():
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
-        'C': np.logspace(-1, 3, 10 ** 6)
+        'C': np.logspace(-4, 3, 10 ** 6)
     }
     n_iter = 100
     best_accuracy = 0
@@ -73,7 +73,7 @@ def train():
         print('Optimizing SVM hyperparameters...')
         svm = SVC(kernel='linear')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
-                                           refit=False, verbose=1)
+                                           refit=False, verbose=1, cv=4)
         random_search.fit(vis_words, labels)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 
@@ -98,12 +98,19 @@ def train():
 
 
 def plot_curve():
-    res = io.load_object('linear_svm_optimization')
+    print('Loading results object...')
+    res = io.load_object('linear_svm_optimization', ignore=True)
+
+    print('Plotting...')
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
     plt.figure()
-    for k in res:
+    # Compute subplot parameters
+    num_subplots = len(res)
+    num_rows = np.ceil(num_subplots / 2)
+    # All subplots
+    for ind, k in enumerate(sorted(res.keys())):
         results = res[k]
         x = results['param_C']
         y = results['mean_test_score']
@@ -113,24 +120,24 @@ def plot_curve():
         y_sorted = np.asarray(y[sorted_indices], dtype=np.float64)
         e_sorted = np.asarray(e[sorted_indices], dtype=np.float64)
         color = colors.next()
-        plt.errorbar(x_sorted, y_sorted, e_sorted, label='{} visual words'.format(k), color=color)
-
-    plt.legend()
-    plt.title('Optimization of C for Linear SVM')
-    plt.xlabel('C')
-    plt.ylabel('Accuracy')
+        ax = plt.subplot(num_rows, 2, ind+1)
+        ax.set_xscale("log")
+        ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
+        ax.set_title('{} visual words'.format(k))
+        ax.set_ylim((0.25, 0.6))
     plt.show()
+    plt.close()
 
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('type', default='train', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 
     if exec_option == 'train':
         train()
-    else:
+    elif exec_option == 'plot':
         plot_curve()
     exit(0)
