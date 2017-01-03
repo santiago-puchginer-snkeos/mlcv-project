@@ -108,7 +108,7 @@ def plot_curve():
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
-    plt.figure()
+    plt.figure(figsize=(40, 20), facecolor='white')
     # Compute subplot parameters
     num_subplots = len(res)
     num_rows = np.ceil(num_subplots / 2)
@@ -123,11 +123,14 @@ def plot_curve():
         y_sorted = np.asarray(y[sorted_indices], dtype=np.float64)
         e_sorted = np.asarray(e[sorted_indices], dtype=np.float64)
         color = colors.next()
-        ax = plt.subplot(num_rows, 2, ind+1)
+        ax = plt.subplot(num_rows, 2, ind + 1)
         ax.set_xscale("log")
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} visual words'.format(k))
         ax.set_ylim((0.25, 0.6))
+        ax.set_xlabel('C')
+        ax.set_ylabel('Accuracy')
+    plt.tight_layout()
     plt.show()
     plt.close()
 

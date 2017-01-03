@@ -4,6 +4,8 @@ import argparse
 import itertools
 import time
 
+from mpl_toolkits.mplot3d import Axes3D
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
@@ -105,28 +107,33 @@ def train():
 
 
 def plot_curve():
+    print('Loading results object...')
     res = io.load_object('rbf_svm_optimization', ignore=True)
+
+    print('Plotting...')
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
-    plt.figure()
-    for k in res:
+    fig = plt.figure(figsize=(40, 20), facecolor='white')
+    # Compute subplot parameters
+    num_subplots = len(res)
+    num_rows = np.ceil(num_subplots / 2)
+    # All subplots
+    for ind, k in enumerate(sorted(res.keys())):
         results = res[k]
         x = results['param_C']
-        y = results['mean_test_score']
-        e = results['std_test_score']
-        sorted_indices = x.argsort()
-        x_sorted = np.asarray(x[sorted_indices], dtype=np.float64)
-        y_sorted = np.asarray(y[sorted_indices], dtype=np.float64)
-        e_sorted = np.asarray(e[sorted_indices], dtype=np.float64)
+        y = results['param_gamma']
+        z = results['mean_test_score']
         color = colors.next()
-        plt.errorbar(x_sorted, y_sorted, e_sorted, label='{} visual words'.format(k), color=color)
-
-    plt.legend()
-    plt.title('Optimization of C for Linear SVM')
-    plt.xlabel('C')
-    plt.ylabel('Accuracy')
+        ax = fig.add_subplot(num_rows, 2, ind + 1, projection='3d')
+        ax.scatter(x, y, z, c=color, lw=2)
+        ax.set_title('{} visual words'.format(k))
+        ax.set_xlabel('C')
+        ax.set_ylabel('gamma')
+        ax.set_zlabel('Accuracy')
+    plt.tight_layout()
     plt.show()
+    plt.close()
 
 
 """ MAIN SCRIPT"""
