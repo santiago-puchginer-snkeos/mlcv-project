@@ -45,8 +45,8 @@ def train():
     print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR RBF SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
-        'C': np.logspace(-4, 3, 10 ** 3),
-        'gamma': np.logspace(-3, 5, 10 ** 3)
+        'C': np.logspace(-4, 1, 10 ** 3),
+        'gamma': np.logspace(-3, 1, 10 ** 3)
     }
     n_iter = 100
     best_accuracy = 0
