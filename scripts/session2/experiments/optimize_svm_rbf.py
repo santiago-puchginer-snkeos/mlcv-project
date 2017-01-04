@@ -63,7 +63,7 @@ def train():
         temp = time.time()
 
         print('Getting visual words from training set...')
-        vis_words, labels = bovw.visual_words(D, L, I, codebook)
+        vis_words, labels = bovw.visual_words(D, L, I, codebook,normalization='l1')
         print('Time spend: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -87,7 +87,7 @@ def train():
 
         # Appending all parameter-scores combinations
         cv_results.update({k: results})
-        io.save_object(cv_results, 'rbf_svm_optimization')
+        io.save_object(cv_results, 'rbf_svm_optimization_norml1')
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:
@@ -102,7 +102,7 @@ def train():
                                                               best_accuracy))
 
     print('Saving all cross-validation values...')
-    io.save_object(cv_results, 'rbf_svm_optimization')
+    io.save_object(cv_results, 'rbf_svm_optimization_norml1')
     print('Done')
 
 
@@ -124,6 +124,11 @@ def plot_curve():
         x = results['param_C']
         y = results['param_gamma']
         z = results['mean_test_score']
+        print('For codebook with visual words {} '.format(k))
+        print('Accuracy {}'.format(max(z)))
+        print ('C {}'.format(x[np.argmax(z)]))
+        print('gamma {}'.format(y[np.argmax(z)]))
+
         color = colors.next()
         ax = fig.add_subplot(num_rows, 2, ind + 1, projection='3d')
         ax.scatter(x, y, z, c=color, lw=2)
