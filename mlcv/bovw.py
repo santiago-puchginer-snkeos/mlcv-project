@@ -5,7 +5,7 @@ import mlcv.input_output as io
 
 
 def create_codebook(X, k=512, codebook_name=None, k_means_init='random'):
-    batch_size = 20*k if X.shape[0] > 20*k else X.shape[0] / 10
+    batch_size = 20 * k if X.shape[0] > 20 * k else X.shape[0] / 10
     codebook = cluster.MiniBatchKMeans(n_clusters=k, verbose=False, batch_size=batch_size, compute_labels=False,
                                        reassignment_ratio=10 ** -4, init=k_means_init)
 
@@ -27,7 +27,7 @@ def visual_words(X, y, descriptors_indices, codebook, normalization=None):
     k = codebook.cluster_centers_.shape[0]
     prediction = codebook.predict(X)
     v_words = np.array([np.bincount(prediction[descriptors_indices == i], minlength=k) for i in
-               range(0, descriptors_indices.max() + 1)], dtype=np.float64)
+                        range(0, descriptors_indices.max() + 1)], dtype=np.float64)
     # Normalization
     if normalization == 'l1':
         vis_words = v_words / np.linalg.norm(v_words, axis=1, keepdims=True)

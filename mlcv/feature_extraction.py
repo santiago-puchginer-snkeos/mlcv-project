@@ -175,12 +175,14 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=3
 
     return descriptors_matrix, labels_matrix, indices_matrix
 
+
 def dense(gray):
-    dense=cv2.FeatureDetector_create("Dense")
-    kp=dense.detect(gray)
-    sift_detector=cv2.SIFT()
-    kp,des=sift_detector.compute(gray,kp)
+    dense = cv2.FeatureDetector_create("Dense")
+    kp = dense.detect(gray)
+    sift_detector = cv2.SIFT()
+    kp, des = sift_detector.compute(gray, kp)
     return kp, des
+
 
 def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
     descriptors = []
@@ -254,6 +256,7 @@ def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
     return descriptors_matrix, labels_matrix, indices_matrix
+
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
     orb_fe = cv2.ORB(nfeatures=n_features, nlevels=levels, edgeThreshold=edge_threshold, WTA_K=wtak)

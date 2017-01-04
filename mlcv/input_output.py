@@ -7,9 +7,9 @@ try:
 except ImportError:
     import pickle
 
-DATASET_PATH = './dataset'
-MODELS_PATH = './models'
-IGNORE_PATH = './ignore'
+DATASET_PATH = 'dataset'
+MODELS_PATH = 'models'
+IGNORE_PATH = 'ignore'
 
 
 def load_training_set():

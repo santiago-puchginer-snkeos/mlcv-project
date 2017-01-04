@@ -16,7 +16,7 @@ import mlcv.input_output as io
 import mlcv.kernels as kernels
 
 """ CONSTANTS """
-N_JOBS = 8
+N_JOBS = 4
 
 
 def train():
@@ -33,7 +33,7 @@ def train():
                   io.load_object('train_sift_labels', ignore=True), \
                   io.load_object('train_sift_indices', ignore=True)
     except IOError:
-        D, L, I, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
+        D, L, I = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
         io.save_object(D, 'train_sift_descriptors', ignore=True)
         io.save_object(L, 'train_sift_labels', ignore=True)
@@ -41,7 +41,7 @@ def train():
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
 
     # Start hyperparameters optimization
-    print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
+    print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR INTERSECTION SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
         'C': np.logspace(-4, 3, 10 ** 6)
@@ -80,8 +80,12 @@ def train():
         random_search.fit(gram, labels)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 
+        # Convert MaskedArrays to ndarrays to avoid unpickling bugs
+        results = random_search.cv_results_
+        results['param_C'] = results['param_C'].data
+
         # Appending all parameter-scores combinations
-        cv_results.update({k: random_search.cv_results_})
+        cv_results.update({k: results})
         io.save_object(cv_results, 'intersection_svm_optimization')
 
         # Obtaining the parameters which yielded the best accuracy

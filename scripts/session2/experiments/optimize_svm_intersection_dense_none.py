@@ -13,6 +13,7 @@ from sklearn.svm import SVC
 import mlcv.bovw as bovw
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
+import mlcv.kernels as kernels
 
 """ CONSTANTS """
 N_JOBS = 4
@@ -26,21 +27,21 @@ def train():
     print('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Feature extraction with sift
-    print('Obtaining sift features...')
+    print('Obtaining dense sift features...')
     try:
-        D, L, I = io.load_object('train_sift_descriptors', ignore=True), \
-                  io.load_object('train_sift_labels', ignore=True), \
-                  io.load_object('train_sift_indices', ignore=True)
+        D, L, I = io.load_object('train_dense_descriptors', ignore=True), \
+                  io.load_object('train_dense_labels', ignore=True), \
+                  io.load_object('train_dense_indices', ignore=True)
     except IOError:
-        D, L, I = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
-                                                      n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors', ignore=True)
-        io.save_object(L, 'train_sift_labels', ignore=True)
-        io.save_object(I, 'train_sift_indices', ignore=True)
+        D, L, I = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
+                                                    n_jobs=N_JOBS)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
 
     # Start hyperparameters optimization
-    print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR LINEAR SVM')
+    print('\nSTARTING HYPERPARAMETER OPTIMIZATION FOR INTERSECTION SVM')
     codebook_k_values = [2 ** i for i in range(7, 16)]
     params_distribution = {
         'C': np.logspace(-4, 3, 10 ** 6)
@@ -55,12 +56,12 @@ def train():
         temp = time.time()
         print('Creating codebook with {} visual words'.format(k))
         D = D.astype(np.uint32)
-        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}'.format(k))
+        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}_dense'.format(k))
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
         print('Getting visual words from training set...')
-        vis_words, labels = bovw.visual_words(D, L, I, codebook)
+        vis_words, labels = bovw.visual_words(D, L, I, codebook, normalization=None)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -71,10 +72,12 @@ def train():
         temp = time.time()
 
         print('Optimizing SVM hyperparameters...')
-        svm = SVC(kernel='linear')
+        svm = SVC(kernel='precomputed')
         random_search = RandomizedSearchCV(svm, params_distribution, n_iter=n_iter, scoring='accuracy', n_jobs=N_JOBS,
                                            refit=False, verbose=1, cv=4)
-        random_search.fit(vis_words, labels)
+        # Precompute Gram matrix
+        gram = kernels.intersection_kernel(vis_words, vis_words)
+        random_search.fit(gram, labels)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
 
         # Convert MaskedArrays to ndarrays to avoid unpickling bugs
@@ -83,7 +86,7 @@ def train():
 
         # Appending all parameter-scores combinations
         cv_results.update({k: results})
-        io.save_object(cv_results, 'linear_svm_optimization')
+        io.save_object(cv_results, 'intersection_dense_none_svm_optimization')
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:
@@ -97,13 +100,13 @@ def train():
     print('k={}, C={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'], best_accuracy))
 
     print('Saving all cross-validation values...')
-    io.save_object(cv_results, 'linear_svm_optimization')
+    io.save_object(cv_results, 'intersection_dense_none_svm_optimization')
     print('Done')
 
 
 def plot_curve():
     print('Loading results object...')
-    res = io.load_object('linear_svm_optimization', ignore=True)
+    res = io.load_object('intersection_dense_none_svm_optimization', ignore=True)
 
     print('Plotting...')
     colors = itertools.cycle(
@@ -128,7 +131,6 @@ def plot_curve():
         ax.set_xscale("log")
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} visual words'.format(k))
-        ax.set_ylim((0.25, 0.6))
         ax.set_xlabel('C')
         ax.set_ylabel('Accuracy')
     plt.tight_layout()
