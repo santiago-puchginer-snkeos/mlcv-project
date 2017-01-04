@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=30)
+    D, L, _, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=30)
     print('Time spend: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D_t, L_t, I_t = feature_extraction.parallel_sift(test_images_filenames, test_labels)
+    D_t, L_t, I_t, _ = feature_extraction.parallel_sift(test_images_filenames, test_labels)
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     svm = time.time()
 

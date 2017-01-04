@@ -35,14 +35,14 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels,
+    D, L, _, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels,
                                                n_jobs=N_JOBS)
     print('Time spend: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, C=5, gamma=0.1, model_name='final_noprob_sift_all_svm')
+    lin_svm, std_scaler, pca = classification.train_rbf_svm(D, L, model_name='final_noprob_sift_all_svm')
     print('Time spend: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     result = joblib.Parallel(n_jobs=N_JOBS, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, pca) for test_image, test_label in
+        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, None) for test_image, test_label in
         zip(test_images_filenames, test_labels))
 
     correct_class = [i[0] for i in result]
@@ -70,6 +70,7 @@ if __name__ == '__main__':
     conf = metrics.confusion_matrix(expected, predicted, labels=lin_svm.classes_)
     # Plot normalized confusion matrix
     #plot_confusion_matrix(conf, classes=lin_svm.classes_, normalize=True)
+
 
     io.save_object(conf, 'final_noprob_sift_all_cm')
 

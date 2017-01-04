@@ -40,14 +40,15 @@ def seq_sift(list_images_filenames, list_images_labels, num_samples_class=30):
 
 def compute_sift(ind, filename, label):
     grayscale = io.load_grayscale_image(filename)
-    _, des = sift(grayscale)
-    return des, label, ind
+    kp, des = sift(grayscale)
+    return des, label, ind, kp
 
 
 def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=30, n_jobs=4, **kwargs):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
+    keypoints = []
 
     if num_samples_class > 0:
         iterable_images = []
@@ -65,21 +66,24 @@ def parallel_sift(list_images_filenames, list_images_labels, num_samples_class=3
         enumerate(zip(list_images_filenames, list_images_labels))
     )
 
-    for des, label, ind in res:
+    for des, label, ind, kp in res:
         descriptors.append(des)
         label_per_descriptor.append(label)
         image_id_per_descriptor.append(ind)
+        keypoints.append(np.array(kp))
 
     # Transform the descriptors and the labels to numpy arrays
     descriptors_matrix = descriptors[0]
+    keypoints_matrix = keypoints[0]
     labels_matrix = np.array([label_per_descriptor[0]] * descriptors[0].shape[0])
     indices_matrix = np.array([image_id_per_descriptor[0]] * descriptors[0].shape[0])
     for i in range(1, len(descriptors)):
         descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
+        keypoints_matrix = np.hstack((keypoints_matrix, keypoints[i]))
         labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
-    return descriptors_matrix, labels_matrix, indices_matrix
+    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix
 
 
 def surf(gray):

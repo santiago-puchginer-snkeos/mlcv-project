@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     # Feature extraction with sift
     print('Obtaining sift features...')
-    D, L, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels)
+    D, L, _, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels)
     print('Time spend: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
