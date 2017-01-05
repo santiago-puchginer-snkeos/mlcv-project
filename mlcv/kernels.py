@@ -33,3 +33,11 @@ def intersection_kernel(X, Y):
             intersection[i:i + x_slicing, :] = np.sum(minim, axis=1)
 
     return intersection
+
+def pyramid_kernel(X, Y):
+    codebook_size = len(X[0,:])/21
+    intersection = 0
+    for i in range(0,len(X[0,:]),codebook_size):
+        intersection = intersection + intersection_kernel(X[:,i:i+codebook_size], Y[:,i:i+codebook_size])
+
+    return intersection
