@@ -64,22 +64,25 @@ def build_pyramid(prediction, descriptors_indices, k, keypoints):
 
         for ini_i in range(0,129,128):
             for ini_j in range(0, 129, 128):
-                level0_1_4.append(np.bincount(image_predictions[(image_keypoints[:, 0] < ini_i + 64) &
-                                                              (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
+                level0_1_4.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i) &
+                                                                (image_keypoints[:, 0] < ini_i + 64) &
+                                                                (image_keypoints[:, 1] >= ini_j) &
+                                                                (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
 
-                level0_5_8.append(np.bincount(image_predictions[(image_keypoints[:, 0] < ini_i + 64) &
-                                                              (image_keypoints[:, 1] >= ini_j + 64) &
-                                                              (image_keypoints[:,1] < ini_j + 128)], minlength=k))
+                level0_5_8.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i) &
+                                                                (image_keypoints[:, 0] < ini_i + 64) &
+                                                                (image_keypoints[:, 1] >= ini_j + 64) &
+                                                                (image_keypoints[:, 1] < ini_j + 128)], minlength=k))
 
                 level0_9_12.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i + 64) &
-                                                              (image_keypoints[:,0] < ini_i + 128) &
-                                                              (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
+                                                                 (image_keypoints[:, 0] < ini_i + 128) &
+                                                                 (image_keypoints[:, 1] >= ini_j) &
+                                                                 (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
 
                 level0_13_16.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i + 64) &
-                                                              (image_keypoints[:,0] < ini_i + 128) &
-                                                              (image_keypoints[:, 1] >= ini_j + 64) &
-                                                              (image_keypoints[:,1] < ini_j + 128)], minlength=k))
-
+                                                                  (image_keypoints[:, 0] < ini_i + 128) &
+                                                                  (image_keypoints[:, 1] >= ini_j + 64) &
+                                                                  (image_keypoints[:, 1] < ini_j + 128)], minlength=k))
         # Level 1- 2x2 grid
         level1_1 = level0_1_4[0] + level0_1_4[1] + level0_1_4[2] + level0_1_4[3]
         level1_2 = level0_5_8[0] + level0_5_8[1] + level0_5_8[2] + level0_5_8[3]
