@@ -109,12 +109,13 @@ def plot_curve():
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
-    plt.figure(figsize=(40, 20), facecolor='white')
+    plt.figure(figsize=(20, 10), dpi=200, facecolor='white')
     # Compute subplot parameters
     num_subplots = len(res)
     num_rows = np.ceil(num_subplots / 2)
     # All subplots
     for ind, k in enumerate(sorted(res.keys())):
+        # Plot
         results = res[k]
         x = results['param_C']
         y = results['mean_test_score']
@@ -131,6 +132,14 @@ def plot_curve():
         ax.set_ylim((0.25, 0.6))
         ax.set_xlabel('C')
         ax.set_ylabel('Accuracy')
+
+        # Print information
+        print('CODEBOOK {} '.format(k))
+        print('-------------')
+        print('Mean accuracy: {}'.format(y.max()))
+        print('Std accuracy: {}'.format(e[np.argmax(y)]))
+        print('C: {}'.format(x[np.argmax(y)]))
+        print()
     plt.tight_layout()
     plt.show()
     plt.close()
