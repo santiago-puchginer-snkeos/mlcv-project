@@ -84,10 +84,10 @@ def build_pyramid(prediction, descriptors_indices, k, keypoints):
                                                                   (image_keypoints[:, 1] >= ini_j + 64) &
                                                                   (image_keypoints[:, 1] < ini_j + 128)], minlength=k))
         # Level 1- 2x2 grid
-        level1_1 = level0_1_4[0] + level0_5_8[0] + level0_9_12[0] + level0_13_16[0]
-        level1_2 = level0_1_4[1] + level0_5_8[1] + level0_9_12[1] + level0_13_16[1]
-        level1_3 = level0_1_4[2] + level0_5_8[2] + level0_9_12[2] + level0_13_16[2]
-        level1_4 = level0_1_4[3] + level0_5_8[3] + level0_9_12[3] + level0_13_16[3]
+        level1_1 = level0_1_4[0] + level0_1_4[1] + level0_1_4[2] + level0_1_4[3]
+        level1_2 = level0_5_8[0] + level0_5_8[1] + level0_5_8[2] + level0_5_8[3]
+        level1_3 = level0_9_12[0] + level0_9_12[1] + level0_9_12[2] + level0_9_12[3]
+        level1_4 = level0_13_16[0] + level0_13_16[1] + level0_13_16[2] + level0_13_16[3]
 
         # Level 2 - whole image
         level2 = level1_1 + level1_2 + level1_3 + level1_4
