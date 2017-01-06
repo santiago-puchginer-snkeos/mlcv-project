@@ -27,20 +27,20 @@ def train():
     print('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Feature extraction with sift
-    print('Obtaining sift features...')
+    print('Obtaining dense sift features...')
     try:
-        D, L, I, Kp_pos = io.load_object('train_sift_descriptors', ignore=True), \
-                  io.load_object('train_sift_labels', ignore=True), \
-                  io.load_object('train_sift_indices', ignore=True), \
-                  io.load_object('train_sift_keypoints', ignore=True)
+        D, L, I, Kp_pos = io.load_object('train_dense_descriptors', ignore=True), \
+                  io.load_object('train_dense_labels', ignore=True), \
+                  io.load_object('train_dense_indices', ignore=True), \
+                  io.load_object('train_dense_keypoints', ignore=True)
     except IOError:
-        D, L, I, Kp = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
+        D, L, I, Kp = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors', ignore=True)
-        io.save_object(L, 'train_sift_labels', ignore=True)
-        io.save_object(I, 'train_sift_indices', ignore=True)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
         Kp_pos = np.array([Kp[i].pt for i in range(0, len(Kp))], dtype=np.float64)
-        io.save_object(Kp_pos, 'train_sift_keypoints', ignore=True)
+        io.save_object(Kp_pos, 'train_dense_keypoints', ignore=True)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
 
@@ -61,12 +61,12 @@ def train():
         temp = time.time()
         print('Creating codebook with {} visual words'.format(k))
         D = D.astype(np.uint32)
-        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}'.format(k))
+        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}_dense'.format(k))
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
         print('Getting visual words from training set...')
-        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos)
+        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos, normalization=None)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -91,7 +91,7 @@ def train():
 
         # Appending all parameter-scores combinations
         cv_results.update({k: results})
-        io.save_object(cv_results, 'pyramid_svm_optimization')
+        io.save_object(cv_results, 'pyramid_svm_optimization_dense')
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:
@@ -105,13 +105,13 @@ def train():
     print('k={}, C={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'], best_accuracy))
 
     print('Saving all cross-validation values...')
-    io.save_object(cv_results, 'pyramid_svm_optimization')
+    io.save_object(cv_results, 'pyramid_svm_optimization_dense')
     print('Done')
 
 
 def plot_curve():
     print('Loading results object...')
-    res = io.load_object('pyramid_svm_optimization', ignore=True)
+    res = io.load_object('pyramid_svm_optimization_dense', ignore=True)
 
     print('Plotting...')
     colors = itertools.cycle(

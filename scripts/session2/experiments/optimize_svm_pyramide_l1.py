@@ -66,7 +66,7 @@ def train():
         temp = time.time()
 
         print('Getting visual words from training set...')
-        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos)
+        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos, normalization='l1')
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 

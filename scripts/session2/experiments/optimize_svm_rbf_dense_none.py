@@ -34,7 +34,7 @@ def train():
                   io.load_object('train_dense_labels', ignore=True), \
                   io.load_object('train_dense_indices', ignore=True)
     except IOError:
-        D, L, I = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
+        D, L, I, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
         io.save_object(D, 'train_dense_descriptors', ignore=True)
         io.save_object(L, 'train_dense_labels', ignore=True)
