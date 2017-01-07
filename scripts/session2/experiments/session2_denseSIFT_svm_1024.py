@@ -56,7 +56,7 @@ if __name__ == '__main__':
         temp = time.time()
 
         print('Creating codebook with {} visual words'.format(K))
-        codebook = bovw.create_codebook(D, k=K, codebook_name='dense_codebook')
+        codebook = bovw.create_codebook(D, k=K, codebook_name='dense_codebook_1024')
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
         # Train Linear SVM classifier
         print('Training the SVM classifier...')
-        lin_svm, std_scaler, pca = classification.train_rbf_svm(vis_words, labels, C=7.76, gamma=0.0013808, dim_reduction=None)
+        lin_svm, std_scaler, pca = classification.train_rbf_svm(vis_words, labels, C=3.42, gamma=0.0013808, dim_reduction=None)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -100,13 +100,13 @@ if __name__ == '__main__':
         classes = lin_svm.classes_
     if store_results==1:
 
-        io.save_object(test_results, 'svm_denseSIFT_test_results_1024')
-        io.save_object(classes,'svm_denseSIFT_classes_1024')
+        io.save_object(test_results, 'svm_denseSIFT_test_results_1024_new_opt')
+        io.save_object(classes,'svm_denseSIFT_classes_1024_new_opt')
     if plot_results==1:
 
         print('Loading results object...')
-        test_results = io.load_object('svm_denseSIFT_test_results_1024', ignore=True)
-        classes = io.load_object('svm_denseSIFT_classes_1024', ignore=True)
+        test_results = io.load_object('svm_denseSIFT_test_results_1024_new_opt', ignore=True)
+        classes = io.load_object('svm_denseSIFT_classes_1024_new_opt', ignore=True)
         pred_results = [x[0] for x in test_results]
         pred_class = [x[1] for x in test_results]
         pred_prob = [x[2] for x in test_results]

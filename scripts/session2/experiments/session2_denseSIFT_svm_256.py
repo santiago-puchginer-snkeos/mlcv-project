@@ -25,7 +25,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     kpt, des = feature_extraction.dense(gray)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
-    vis_word, _ = bovw.visual_words(des, labels, ind, codebook)
+    vis_word, _ = bovw.visual_words(des, labels, ind, codebook,'l1')
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
     predicted_class = lin_svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         temp = time.time()
 
         print('Creating codebook with {} visual words'.format(K))
-        codebook = bovw.create_codebook(D, k=K, codebook_name='dense_codebook')
+        codebook = bovw.create_codebook(D, k=K, codebook_name='codebook_256_dense')
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
         # Train Linear SVM classifier
         print('Training the SVM classifier...')
-        lin_svm, std_scaler, pca = classification.train_rbf_svm(vis_words, labels, C=1.33, gamma=0.00433, dim_reduction=None)
+        lin_svm, std_scaler, pca = classification.train_rbf_svm(vis_words, labels, C=1.65, gamma=0.005926, dim_reduction=None)
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
@@ -100,8 +100,8 @@ if __name__ == '__main__':
         classes = lin_svm.classes_
     if store_results==1:
 
-        io.save_object(test_results, 'svm_denseSIFT_test_results_256')
-        io.save_object(classes,'svm_denseSIFT_classes_256')
+        io.save_object(test_results, 'svm_denseSIFT_test_results_256_l1')
+        io.save_object(classes,'svm_denseSIFT_classes_256_l1')
     if plot_results==1:
 
         print('Loading results object...')

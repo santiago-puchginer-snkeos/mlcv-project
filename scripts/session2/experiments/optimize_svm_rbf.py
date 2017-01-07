@@ -108,7 +108,7 @@ def train():
 
 def plot_curve():
     print('Loading results object...')
-    res = io.load_object('rbf_svm_optimization', ignore=True)
+    res = io.load_object('rbf_svm_optimization_dense_none', ignore=True)
 
     print('Plotting...')
     colors = itertools.cycle(
@@ -124,8 +124,9 @@ def plot_curve():
         x = results['param_C']
         y = results['param_gamma']
         z = results['mean_test_score']
+        t = results['std_test_score']
         print('For codebook with visual words {} '.format(k))
-        print('Accuracy {}'.format(max(z)))
+        print('Accuracy mean {} Accuracy std {}'.format(max(z),t[np.argmax(z)]))
         print ('C {}'.format(x[np.argmax(z)]))
         print('gamma {}'.format(y[np.argmax(z)]))
 
