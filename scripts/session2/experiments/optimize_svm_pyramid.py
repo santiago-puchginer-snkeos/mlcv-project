@@ -156,7 +156,7 @@ def plot_curve():
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 

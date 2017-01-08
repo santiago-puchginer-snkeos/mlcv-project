@@ -137,7 +137,7 @@ def plot_curve():
         ax.set_xscale("log")
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} visual words'.format(k))
-        ax.set_ylim((0.25, 0.6))
+        ax.set_ylim((0, 1))
         ax.set_xlabel('C')
         ax.set_ylabel('Accuracy')
 
@@ -156,7 +156,7 @@ def plot_curve():
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 

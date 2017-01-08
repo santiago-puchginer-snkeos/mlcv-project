@@ -91,7 +91,7 @@ def train():
 
         # Appending all parameter-scores combinations
         cv_results.update({k: results})
-        io.save_object(cv_results, 'pyramid_svm_optimization_dense')
+        io.save_object(cv_results, 'pyramid_svm_optimization_dense_l1')
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:
@@ -105,13 +105,13 @@ def train():
     print('k={}, C={} --> accuracy: {:.3f}'.format(best_params['k'], best_params['C'], best_accuracy))
 
     print('Saving all cross-validation values...')
-    io.save_object(cv_results, 'pyramid_svm_optimization_dense')
+    io.save_object(cv_results, 'pyramid_svm_optimization_dense_l1')
     print('Done')
 
 
 def plot_curve():
     print('Loading results object...')
-    res = io.load_object('pyramid_svm_optimization_dense', ignore=True)
+    res = io.load_object('pyramid_svm_optimization_dense_l1', ignore=True)
 
     print('Plotting...')
     colors = itertools.cycle(
@@ -137,7 +137,7 @@ def plot_curve():
         ax.set_xscale("log")
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} visual words'.format(k))
-        ax.set_ylim((0.25, 0.6))
+        ax.set_ylim((0, 1))
         ax.set_xlabel('C')
         ax.set_ylabel('Accuracy')
 
@@ -156,7 +156,7 @@ def plot_curve():
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 
