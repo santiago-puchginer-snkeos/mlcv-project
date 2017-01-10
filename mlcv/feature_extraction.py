@@ -176,15 +176,16 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=3
     return descriptors_matrix, labels_matrix, indices_matrix
 
 
-def dense(gray):
+def dense(gray, sampling_density):
     dense = cv2.FeatureDetector_create("Dense")
+    dense.setInt('initXyStep', sampling_density)
     kp = dense.detect(gray)
     sift_detector = cv2.SIFT()
     kp, des = sift_detector.compute(gray, kp)
     return kp, des
 
 
-def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
+def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1, sampling_density = 4):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -194,7 +195,7 @@ def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
         n_samples_class = label_per_descriptor.count(label)
         if num_samples_class == -1 or n_samples_class < num_samples_class:
             grayscale = io.load_grayscale_image(filename)
-            kpt, des = dense(grayscale)
+            kpt, des = dense(grayscale, sampling_density)
             descriptors.append(des)
             label_per_descriptor.append(label)
             image_id_per_descriptor.append(i)
