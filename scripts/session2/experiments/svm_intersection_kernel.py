@@ -15,12 +15,12 @@ import mlcv.plotting as plotting
 
 """ CONSTANTS """
 N_JOBS = 4
-K = 512
+K = 2048
 
 
 def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     gray = io.load_grayscale_image(test_image)
-    kpt, des = feature_extraction.sift(gray)
+    kpt, des = feature_extraction.dense(gray)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
     vis_word, _ = bovw.visual_words(des, labels, ind, codebook)
@@ -40,21 +40,21 @@ if __name__ == '__main__':
     # Feature extraction with sift
     print('Obtaining sift features...')
     try:
-        D, L, I = io.load_object('train_sift_descriptors', ignore=True), \
-                  io.load_object('train_sift_labels', ignore=True), \
-                  io.load_object('train_sift_indices', ignore=True)
+        D, L, I = io.load_object('train_dense_descriptors', ignore=True), \
+                  io.load_object('train_dense_labels', ignore=True), \
+                  io.load_object('train_dense_indices', ignore=True)
     except IOError:
-        D, L, I, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
-                                                   n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors', ignore=True)
-        io.save_object(L, 'train_sift_labels', ignore=True)
-        io.save_object(I, 'train_sift_indices', ignore=True)
+        D, L, I, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1,
+                                                       n_jobs=N_JOBS)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
     print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_codebook(D, k=K, codebook_name='default_codebook')
+    codebook = bovw.create_codebook(D, k=K, codebook_name='codebook_{}_dense'.format(K))
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    svm, std_scaler, pca = classification.train_intersection_svm(vis_words, labels, C=1, dim_reduction=None)
+    svm, std_scaler, pca = classification.train_intersection_svm(vis_words, labels, C=0.0023, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
