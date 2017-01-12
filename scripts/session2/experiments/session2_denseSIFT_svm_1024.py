@@ -56,7 +56,7 @@ if __name__ == '__main__':
         temp = time.time()
 
         print('Creating codebook with {} visual words'.format(K))
-        codebook = bovw.create_codebook(D, k=K, codebook_name='dense_codebook_1024')
+        codebook = bovw.create_codebook(D, codebook_name='dense_codebook_1024')
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 

@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 
 import mlcv.input_output as io
-
+import mlcv.settings as settings
 
 def sift(gray, n_features=100):
     sift_fe = cv2.SIFT(nfeatures=n_features)
@@ -176,16 +176,16 @@ def parallel_surf(list_images_filenames, list_images_labels, num_samples_class=3
     return descriptors_matrix, labels_matrix, indices_matrix
 
 
-def dense(gray, sampling_density):
+def dense(gray):
     dense = cv2.FeatureDetector_create("Dense")
-    dense.setInt('initXyStep', sampling_density)
+    dense.setInt('initXyStep', settings.dense_sampling_density)
     kp = dense.detect(gray)
     sift_detector = cv2.SIFT()
     kp, des = sift_detector.compute(gray, kp)
     return kp, des
 
 
-def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1, sampling_density = 4):
+def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
     descriptors = []
     label_per_descriptor = []
     image_id_per_descriptor = []
@@ -195,7 +195,7 @@ def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1, s
         n_samples_class = label_per_descriptor.count(label)
         if num_samples_class == -1 or n_samples_class < num_samples_class:
             grayscale = io.load_grayscale_image(filename)
-            kpt, des = dense(grayscale, sampling_density)
+            kpt, des = dense(grayscale)
             descriptors.append(des)
             label_per_descriptor.append(label)
             image_id_per_descriptor.append(i)

@@ -24,7 +24,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     kpt_pos = np.array([kpt[i].pt for i in range(0, len(kpt))], dtype=np.float64)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
-    vis_word, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True, keypoints=kpt_pos)
+    vis_word, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True)
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
     predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
@@ -58,12 +58,12 @@ if __name__ == '__main__':
     temp = time.time()
 
     print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_codebook(D, k=K, codebook_name='default_codebook')
+    codebook = bovw.create_codebook(D, codebook_name='default_codebook')
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     print('Getting visual words from training set...')
-    vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos, normalization='l1')
+    vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, normalization='l1')
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 

@@ -21,7 +21,7 @@ D, L, I, Kp_pos = io.load_object('train_sift_descriptors', ignore=True), \
                   io.load_object('train_sift_indices', ignore=True), \
                   io.load_object('train_sift_keypoints', ignore=True)
 
-codebook = bovw.create_codebook(D, k=K, codebook_name='default_codebook')
+codebook = bovw.create_codebook(D, codebook_name='default_codebook')
 
 
 X=D

@@ -12,19 +12,22 @@ import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 import mlcv.plotting as plotting
+import mlcv.settings as settings
 
 """ CONSTANTS """
 N_JOBS = 4
-K = 512
+settings.codebook_size = 512
+settings.dense_sampling_density = 6
+
 
 
 def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     gray = io.load_grayscale_image(test_image)
-    kpt, des = feature_extraction.sift(gray)
+    kpt, des = feature_extraction.dense(gray)
     kpt_pos = np.array([kpt[i].pt for i in range(0, len(kpt))], dtype=np.float64)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
-    vis_word, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True, keypoints=kpt_pos)
+    vis_word, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True)
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
     predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
@@ -34,6 +37,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
 if __name__ == '__main__':
     start = time.time()
 
+
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
     print('Loaded {} train images.'.format(len(train_images_filenames)))
@@ -41,36 +45,35 @@ if __name__ == '__main__':
     # Feature extraction with sift
     print('Obtaining sift features...')
     try:
-        D, L, I, Kp_pos = io.load_object('train_sift_descriptors', ignore=True), \
-                  io.load_object('train_sift_labels', ignore=True), \
-                  io.load_object('train_sift_indices', ignore=True), \
-                  io.load_object('train_sift_keypoints', ignore=True)
+        D, L, I, Kp_pos = io.load_object('train_dense_descriptors', ignore=True), \
+                  io.load_object('train_dense_labels', ignore=True), \
+                  io.load_object('train_dense_indices', ignore=True), \
+                  io.load_object('train_dense_keypoints', ignore=True)
+
     except IOError:
-        D, L, I, Kp = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
-                                                   n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors', ignore=True)
-        io.save_object(L, 'train_sift_labels', ignore=True)
-        io.save_object(I, 'train_sift_indices', ignore=True)
+        D, L, I, Kp = feature_extraction.seq_dense(train_images_filenames, train_labels, num_samples_class=-1)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
         Kp_pos = np.array([Kp[i].pt for i in range(0, len(Kp))], dtype=np.float64)
-        io.save_object(Kp_pos, 'train_sift_keypoints', ignore=True)
+        io.save_object(Kp_pos, 'train_dense_keypoints', ignore=True)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
-    print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_codebook(D, k=K, codebook_name='default_codebook')
+    print('Creating codebook with {} visual words'.format(settings.codebook_size))
+    codebook = bovw.create_codebook(D, codebook_name='default_codebook')
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     print('Getting visual words from training set...')
-    vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos)
+    vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    pyramid_svm, std_scaler, pca = classification.train_pyramid_svm(vis_words, labels, C=1, dim_reduction=None)
-
+    pyramid_svm, std_scaler, pca = classification.train_pyramid_svm(vis_words, labels, C=0.0009, dim_reduction=None)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
@@ -121,7 +124,7 @@ if __name__ == '__main__':
     # Plot
     plotting.plot_confusion_matrix(conf, classes=classes, normalize=True)
     plotting.plot_roc_curve(fpr, tpr, roc_auc, classes=classes,
-                            title='ROC curve for linear SVM with codebook of {} words'.format(K)
+                            title='ROC curve for linear SVM with codebook of {} words'.format(settings.codebook_size)
                             )
 
     print('Done.')

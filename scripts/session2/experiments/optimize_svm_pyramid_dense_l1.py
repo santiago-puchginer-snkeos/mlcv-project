@@ -61,12 +61,12 @@ def train():
         temp = time.time()
         print('Creating codebook with {} visual words'.format(k))
         D = D.astype(np.uint32)
-        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}_dense'.format(k))
+        codebook = bovw.create_codebook(D, codebook_name='codebook_{}_dense'.format(k))
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
         print('Getting visual words from training set...')
-        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, keypoints=Kp_pos, normalization='l1')
+        vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True, normalization='l1')
         print('Elapsed time: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 

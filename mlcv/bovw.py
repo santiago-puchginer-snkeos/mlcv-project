@@ -1,10 +1,10 @@
 import numpy as np
 import sklearn.cluster as cluster
-
 import mlcv.input_output as io
+import mlcv.settings as settings
 
-
-def create_codebook(X, k=512, codebook_name=None, k_means_init='random'):
+def create_codebook(X, codebook_name=None, k_means_init='random'):
+    k = settings.codebook_size
     batch_size = 20 * k if X.shape[0] > 20 * k else X.shape[0] / 10
     codebook = cluster.MiniBatchKMeans(n_clusters=k, verbose=False, batch_size=batch_size, compute_labels=False,
                                        reassignment_ratio=10 ** -4, init=k_means_init)
@@ -23,15 +23,15 @@ def create_codebook(X, k=512, codebook_name=None, k_means_init='random'):
     return codebook
 
 
-def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatial_pyramid=False, keypoints=None):
-    k = codebook.cluster_centers_.shape[0]
-    prediction = codebook.predict(X)
+def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatial_pyramid=False):
 
+    prediction = codebook.predict(X)
+    v_words=[]
     if spatial_pyramid==False:
-        v_words = np.array([np.bincount(prediction[descriptors_indices == i], minlength=k) for i in
+        v_words = np.array([np.bincount(prediction[descriptors_indices == i], minlength=settings.codebook_size) for i in
                    range(0, descriptors_indices.max() + 1)], dtype=np.float64)
     elif spatial_pyramid==True:
-        v_words = build_pyramid(prediction, descriptors_indices, k, keypoints)
+        v_words = build_pyramid(prediction, descriptors_indices)
 
     # Normalization
     if normalization == 'l1':
@@ -46,7 +46,9 @@ def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatia
     return vis_words, np.array(labels)
 
 
-def build_pyramid(prediction, descriptors_indices, k, keypoints):
+def build_pyramid(prediction, descriptors_indices):
+
+    levels=settings.pyramid_levels
 
     v_words = []
 
@@ -54,51 +56,31 @@ def build_pyramid(prediction, descriptors_indices, k, keypoints):
     for i in range(0, descriptors_indices.max() + 1):
 
         image_predictions = prediction[descriptors_indices == i]
-        image_keypoints = keypoints[descriptors_indices == i]
+        #image_keypoints = keypoints[descriptors_indices == i]
 
-        # Level 0 - 4x4 grid
-        level0_1_4 = []
-        level0_5_8 = []
-        level0_9_12 = []
-        level0_13_16 = []
+        im_representation = 0.25*np.bincount(image_predictions, minlength=settings.codebook_size)
 
-        for ini_i in range(0,129,128):
-            for ini_j in range(0, 129, 128):
-                level0_1_4.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i) &
-                                                                (image_keypoints[:, 0] < ini_i + 64) &
-                                                                (image_keypoints[:, 1] >= ini_j) &
-                                                                (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
+        keypoints_shape = int(settings.get_keypoints_shape())
+        image_predictions_grid = np.reshape(image_predictions,keypoints_shape)
+        kp_i = keypoints_shape[0]
+        kp_j = keypoints_shape[1]
 
-                level0_5_8.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i) &
-                                                                (image_keypoints[:, 0] < ini_i + 64) &
-                                                                (image_keypoints[:, 1] >= ini_j + 64) &
-                                                                (image_keypoints[:, 1] < ini_j + 128)], minlength=k))
+        for level in range(0,len(levels)):
+            num_rows = levels[level][0]
+            num_cols = levels[level][1]
+            step = int(settings.dense_sampling_density)
 
-                level0_9_12.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i + 64) &
-                                                                 (image_keypoints[:, 0] < ini_i + 128) &
-                                                                 (image_keypoints[:, 1] >= ini_j) &
-                                                                 (image_keypoints[:, 1] < ini_j + 64)], minlength=k))
+            weight = 0.25
 
-                level0_13_16.append(np.bincount(image_predictions[(image_keypoints[:, 0] >= ini_i + 64) &
-                                                                  (image_keypoints[:, 0] < ini_i + 128) &
-                                                                  (image_keypoints[:, 1] >= ini_j + 64) &
-                                                                  (image_keypoints[:, 1] < ini_j + 128)], minlength=k))
-        # Level 1- 2x2 grid
-        level1_1 = level0_1_4[0] + level0_1_4[1] + level0_1_4[2] + level0_1_4[3]
-        level1_2 = level0_5_8[0] + level0_5_8[1] + level0_5_8[2] + level0_5_8[3]
-        level1_3 = level0_9_12[0] + level0_9_12[1] + level0_9_12[2] + level0_9_12[3]
-        level1_4 = level0_13_16[0] + level0_13_16[1] + level0_13_16[2] + level0_13_16[3]
+            if level==1:
+                weight = 0.5
+            for i in range(0,kp_i,step):
+                for j in range(0,kp_j,step):
+                    hist = weight*np.array(np.bincount(image_predictions_grid[i:i+kp_i/num_rows, j:j+kp_j/num_cols].reshape(-1), minlength=k))
+                    im_representation = np.hstack((im_representation,hist))
 
-        # Level 2 - whole image
-        level2 = level1_1 + level1_2 + level1_3 + level1_4
 
-        representation = np.hstack((0.25*level2,0.25*level1_1,0.25*level1_2,0.25*level1_3,0.25*level1_4))
-        for g in range(0,4):
-            representation = np.hstack((representation, 0.5*level0_1_4[g]))
-            representation = np.hstack((representation, 0.5*level0_5_8[g]))
-            representation = np.hstack((representation, 0.5*level0_9_12[g]))
-            representation = np.hstack((representation, 0.5*level0_13_16[g]))
+        v_words.append(im_representation)
 
-        v_words.append(representation)
 
     return np.array(v_words, dtype=np.float64)

@@ -58,7 +58,7 @@ def train():
         temp = time.time()
         print('Creating codebook with {} visual words'.format(k))
         D = D.astype(np.uint32)
-        codebook = bovw.create_codebook(D, k=k, codebook_name='codebook_{}'.format(k))
+        codebook = bovw.create_codebook(D, codebook_name='codebook_{}'.format(k))
         print('Time spend: {:.2f} s'.format(time.time() - temp))
         temp = time.time()
 
