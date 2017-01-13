@@ -260,7 +260,7 @@ def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=
         labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
-    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix
+    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix,descriptors
 
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
