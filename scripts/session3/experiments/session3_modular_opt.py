@@ -6,24 +6,28 @@ import joblib
 import numpy as np
 from sklearn.metrics import confusion_matrix, auc, roc_curve
 from sklearn.preprocessing import label_binarize
+import sys
+
+sys.path.insert(0, '.')
 
 import mlcv.bovw as bovw
 import mlcv.classification as classification
 import mlcv.feature_extraction as feature_extraction
 import mlcv.input_output as io
 import mlcv.plotting as plotting
+import mlcv.settings as settings
 
 """ CONSTANTS """
 N_JOBS = 4
-K = 512
+K = 16
 
 
 def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     gray = io.load_grayscale_image(test_image)
-    kpt, des = feature_extraction.sift(gray)
+    kpt, des = feature_extraction.dense(gray)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
-    vis_word, _ = bovw.visual_words(des, labels, ind, codebook)
+    vis_word, _ = bovw.fisher_vectors(des, labels, ind, codebook)
     prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
     predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
@@ -32,39 +36,42 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     start = time.time()
-
+    settings.codebook_size = K
+    settings.dense_sampling_density = 16
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
     print('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Feature extraction with sift
-    print('Obtaining sift features...')
+    print('Obtaining dense features...')
     try:
-        D, L, I = io.load_object('train_sift_descriptors', ignore=True), \
-                  io.load_object('train_sift_labels', ignore=True), \
-                  io.load_object('train_sift_indices', ignore=True)
+        D, L, I = io.load_object('train_dense_descriptors_pca_60', ignore=True), \
+                  io.load_object('train_dense_labels_pca_60', ignore=True), \
+                  io.load_object('train_dense_indices_pca_60', ignore=True)
     except IOError:
         D, L, I, Kp = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_sift_descriptors', ignore=True)
-        io.save_object(L, 'train_sift_labels', ignore=True)
-        io.save_object(I, 'train_sift_indices', ignore=True)
+        io.save_object(D, 'train_dense_descriptors', ignore=True)
+        io.save_object(L, 'train_dense_labels', ignore=True)
+        io.save_object(I, 'train_dense_indices', ignore=True)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
     print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_codebook(D, codebook_name='default_codebook')
+    codebook = bovw.create_gmm(D,codebook_name='gmm_{}_dense.'.format(K))
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     print('Getting visual words from training set...')
-    vis_words, labels = bovw.visual_words(D, L, I, codebook)
+    vis_words, labels = bovw.fisher_vectors(D, L, I, codebook)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
+    vis_words = vis_words.reshape(len(vis_words), 1)
+    print(vis_words.shape)
     lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()

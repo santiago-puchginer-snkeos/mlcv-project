@@ -2,6 +2,8 @@ import numpy as np
 import sklearn.cluster as cluster
 import mlcv.input_output as io
 import mlcv.settings as settings
+from yael import ynumpy
+
 
 def create_codebook(X, codebook_name=None, k_means_init='random'):
     k = settings.codebook_size
@@ -22,6 +24,20 @@ def create_codebook(X, codebook_name=None, k_means_init='random'):
 
     return codebook
 
+def create_gmm(D, codebook_name):
+    k = settings.codebook_size
+    if codebook_name is not None:
+        # Try to load a previously trained codebook
+        try:
+            gmm = io.load_object(codebook_name)
+        except (IOError, EOFError):
+            gmm = ynumpy.gmm_learn(D, k)
+            # Store the model with the provided name
+            io.save_object(gmm, codebook_name)
+    else:
+        gmm = ynumpy.gmm_learn(D, k)
+
+    return gmm
 
 def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatial_pyramid=False):
 
@@ -44,6 +60,22 @@ def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatia
     labels = [y[descriptors_indices == i][0] for i in
               range(0, descriptors_indices.max() + 1)]
     return vis_words, np.array(labels)
+
+def fisher_vectors(X, y, descriptors_indices, codebook, normalization='l1', spatial_pyramid=False):
+    fv = ynumpy.fisher(codebook, X, include=['mu', 'sigma'])
+    #TODO: Spatial Pyramid Option
+
+    #Normalization
+    if normalization == 'l1':
+        fisher_vect = fv / np.linalg.norm(fv, keepdims=True)
+    elif normalization == 'l2':
+        fisher_vect = fv / np.linalg.norm(fv, keepdims=True) ** 2
+    else:
+        fisher_vect = fv
+    labels = [y[descriptors_indices == i][0] for i in
+              range(0, descriptors_indices.max() + 1)]
+    #fisher_vect.reshape(len(fisher_vect), 1)
+    return fisher_vect, np.array(labels)
 
 
 def build_pyramid(prediction, descriptors_indices):
