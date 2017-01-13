@@ -70,7 +70,6 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    vis_words = vis_words.reshape(len(vis_words), 1)
     print(vis_words.shape)
     lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))

@@ -74,7 +74,7 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization='l1', spat
         fisher_vect = fv
     labels = [y[descriptors_indices == i][0] for i in
               range(0, descriptors_indices.max() + 1)]
-    #fisher_vect.reshape(len(fisher_vect), 1)
+    fisher_vect = fisher_vect.reshape(len(fisher_vect), 1)
     return fisher_vect, np.array(labels)
 
 
