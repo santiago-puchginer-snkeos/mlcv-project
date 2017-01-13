@@ -6,9 +6,7 @@ import joblib
 import numpy as np
 from sklearn.metrics import confusion_matrix, auc, roc_curve
 from sklearn.preprocessing import label_binarize
-import sys
 
-sys.path.insert(0, '.')
 
 import mlcv.bovw as bovw
 import mlcv.classification as classification
