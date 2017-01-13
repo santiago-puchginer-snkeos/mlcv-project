@@ -4,7 +4,7 @@ import math
 
 image_size = [256,256]
 codebook_size = 512
-
+pca_reduction = None
 dense_sampling_density = 6
 
 pyramid_levels=[[2,2],[4,4]]

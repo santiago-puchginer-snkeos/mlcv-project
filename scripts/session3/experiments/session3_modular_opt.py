@@ -17,8 +17,9 @@ import mlcv.settings as settings
 
 """ CONSTANTS """
 N_JOBS = 4
-K = 16
-
+settings.codebook_size = 16
+settings.dense_sampling_density = 16
+settings.pca_reduction = 60
 
 def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
     gray = io.load_grayscale_image(test_image)
@@ -34,8 +35,7 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
     start = time.time()
-    settings.codebook_size = K
-    settings.dense_sampling_density = 16
+
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
     print('Loaded {} train images.'.format(len(train_images_filenames)))
@@ -43,21 +43,21 @@ if __name__ == '__main__':
     # Feature extraction with sift
     print('Obtaining dense features...')
     try:
-        D, L, I = io.load_object('train_dense_descriptors_pca_60', ignore=True), \
-                  io.load_object('train_dense_labels_pca_60', ignore=True), \
-                  io.load_object('train_dense_indices_pca_60', ignore=True)
+        D, L, I = io.load_object('train_dense_16_descriptors_pca_60', ignore=True), \
+                  io.load_object('train_dense_16_labels_pca_60', ignore=True), \
+                  io.load_object('train_dense_16_indices_pca_60', ignore=True)
     except IOError:
         D, L, I, Kp = feature_extraction.parallel_sift(train_images_filenames, train_labels, num_samples_class=-1,
                                                    n_jobs=N_JOBS)
-        io.save_object(D, 'train_dense_descriptors', ignore=True)
-        io.save_object(L, 'train_dense_labels', ignore=True)
-        io.save_object(I, 'train_dense_indices', ignore=True)
+        io.save_object(D, 'train_dense_16_descriptors_pca_60', ignore=True)
+        io.save_object(L, 'train_dense_16_labels_pca_60', ignore=True)
+        io.save_object(I, 'train_dense_16_indices_pca_60', ignore=True)
 
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
-    print('Creating codebook with {} visual words'.format(K))
-    codebook = bovw.create_gmm(D,codebook_name='gmm_{}_dense.'.format(K))
+    print('Creating codebook with {} visual words'.format(settings.codebook_size))
+    codebook = bovw.create_gmm(D,codebook_name='gmm_{}_dense.'.format(settings.codebook_size))
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -69,7 +69,8 @@ if __name__ == '__main__':
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
     print(vis_words.shape)
-    lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=None)
+
+    lin_svm, std_scaler, pca = classification.train_linear_svm(vis_words, labels, C=1, dim_reduction=settings.pca_reduction)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     # Plot
     plotting.plot_confusion_matrix(conf, classes=classes, normalize=True)
     plotting.plot_roc_curve(fpr, tpr, roc_auc, classes=classes,
-                            title='ROC curve for linear SVM with codebook of {} words'.format(K)
+                            title='ROC curve for linear SVM with codebook of {} words'.format(settings.codebook_size)
                             )
 
     print('Done.')
