@@ -1,6 +1,7 @@
 import numpy as np
 import sklearn.cluster as cluster
-from libraries.yael.yael import ynumpy
+#from libraries.yael.yael import ynumpy
+from yael import ynumpy
 
 import mlcv.input_output as io
 import mlcv.settings as settings
@@ -79,6 +80,8 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
         fisher_vect = fv / np.sum(np.abs(fv), axis=1, keepdims=True)
     elif normalization == 'l2':
         fisher_vect = fv / np.linalg.norm(fv, keepdims=True)
+    elif normalization == 'power':
+        fisher_vect = np.multiply(np.sign(fv)* np.sqrt(np.absolute(fv)))
     else:
         fisher_vect = fv
     labels = [y[descriptors_indices == i][0] for i in
