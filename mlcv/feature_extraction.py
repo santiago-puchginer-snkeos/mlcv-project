@@ -1,10 +1,11 @@
 import cv2
 import joblib
 import numpy as np
-
 import sklearn.decomposition as decomposition
+
 import mlcv.input_output as io
 import mlcv.settings as settings
+
 
 def sift(gray, n_features=100):
     sift_fe = cv2.SIFT(nfeatures=n_features)
@@ -250,7 +251,6 @@ def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=
             image_id_per_descriptor.append(ind)
             keypoints.append(np.array(kp))
 
-
     # Transform the descriptors and the labels to numpy arrays
     descriptors_matrix = descriptors[0]
     keypoints_matrix = keypoints[0]
@@ -262,23 +262,18 @@ def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=
         labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
+    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix, descriptors
 
-    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix,descriptors
 
-
-def pca(descriptors_matrix,list_images_filenames):
-     #Applying PCA
+def pca(descriptors_matrix):
+    # Applying PCA
     pca = decomposition.PCA(n_components=settings.pca_reduction)
     pca.fit(descriptors_matrix)
     descriptors_matrix = pca.transform(descriptors_matrix)
-    descriptors_matrix=np.float32(descriptors_matrix)
-    des_m_shape=descriptors_matrix.shape
-    descriptors=[]
-    step=des_m_shape[0]/len(list_images_filenames)
-    for i in range (0,len(list_images_filenames)):
-        descriptors.append(np.float32(descriptors_matrix[step*i:step*i+step,:]))
+    descriptors_matrix = np.float32(descriptors_matrix)
 
-    return pca,descriptors,descriptors_matrix
+    return pca, descriptors_matrix
+
 
 def orb(gray, n_features=100, levels=8, edge_threshold=31, wtak=2):
     orb_fe = cv2.ORB(nfeatures=n_features, nlevels=levels, edgeThreshold=edge_threshold, WTA_K=wtak)
