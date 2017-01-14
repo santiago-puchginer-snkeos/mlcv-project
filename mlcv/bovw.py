@@ -31,11 +31,11 @@ def create_gmm(D, codebook_name):
         try:
             gmm = io.load_object(codebook_name)
         except (IOError, EOFError):
-            gmm = ynumpy.gmm_learn(D, k)
+            gmm = ynumpy.gmm_learn(np.float32(D), k)
             # Store the model with the provided name
             io.save_object(gmm, codebook_name)
     else:
-        gmm = ynumpy.gmm_learn(D, k)
+        gmm = ynumpy.gmm_learn(np.float32(D), k)
 
     return gmm
 
