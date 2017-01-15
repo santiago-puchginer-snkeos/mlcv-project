@@ -21,6 +21,7 @@ def parallel_testing(test_image, test_label, svm, scaler):
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
 
+    pca, des = feature_extraction.pca(des)
     pyramid, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True)
 
     prediction_prob = classification.predict_svm(pyramid, svm, std_scaler=scaler)
@@ -50,7 +51,7 @@ if __name__ == '__main__':
                   io.load_object('train_densee_labels', ignore=True), \
                   io.load_object('train_densee_indices', ignore=True)
     except IOError:
-        D, L, I, _, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels,
+        D, L, I, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels,
                                                        num_samples_class=-1,
                                                        n_jobs=settings.n_jobs)
         io.save_object(D, 'train_densee_descriptors', ignore=True)
