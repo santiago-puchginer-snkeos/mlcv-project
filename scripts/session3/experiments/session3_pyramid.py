@@ -14,14 +14,16 @@ import mlcv.input_output as io
 import mlcv.plotting as plotting
 import mlcv.settings as settings
 
-def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
+
+def parallel_testing(test_image, test_label, svm, scaler):
     gray = io.load_grayscale_image(test_image)
     kpt, des = feature_extraction.dense(gray)
-    kpt_pos = np.array([kpt[i].pt for i in range(0, len(kpt))], dtype=np.float64)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
-    vis_word, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True)
-    prediction_prob = classification.predict_svm(vis_word, svm, std_scaler=scaler, pca=pca)
+
+    pyramid, _ = bovw.visual_words(des, labels, ind, codebook, spatial_pyramid=True)
+
+    prediction_prob = classification.predict_svm(pyramid, svm, std_scaler=scaler)
     predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
 
@@ -30,50 +32,53 @@ def parallel_testing(test_image, test_label, codebook, svm, scaler, pca):
 if __name__ == '__main__':
 
     """ SETTINGS """
-    settings.n_jobs = 4
-    settings.codebook_size = 512
-    settings.dense_sampling_density = 6
+    settings.n_jobs = 1
+    settings.codebook_size = 16
+    settings.dense_sampling_density = 16
+    settings.pca_reduction = 64
 
     start = time.time()
-
 
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
     print('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Feature extraction with sift
-    print('Obtaining sift features...')
+    print('Obtaining dense features...')
     try:
-        D, L, I, Kp_pos = io.load_object('train_dense2_descriptors', ignore=True), \
-                  io.load_object('train_dense2_labels', ignore=True), \
-                  io.load_object('train_dense2_indices', ignore=True), \
-                  io.load_object('train_dense2_keypoints', ignore=True)
-
+        D, L, I = io.load_object('train_densee_descriptors', ignore=True), \
+                  io.load_object('train_densee_labels', ignore=True), \
+                  io.load_object('train_densee_indices', ignore=True)
     except IOError:
-        D, L, I, Kp, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels, num_samples_class=-1)
-        io.save_object(D, 'train_dense_descriptors', ignore=True)
-        io.save_object(L, 'train_dense_labels', ignore=True)
-        io.save_object(I, 'train_dense_indices', ignore=True)
-        Kp_pos = np.array([Kp[i].pt for i in range(0, len(Kp))], dtype=np.float64)
-        io.save_object(Kp_pos, 'train_dense_keypoints', ignore=True)
-
+        D, L, I, _, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels,
+                                                       num_samples_class=-1,
+                                                       n_jobs=settings.n_jobs)
+        io.save_object(D, 'train_densee_descriptors', ignore=True)
+        io.save_object(L, 'train_densee_labels', ignore=True)
+        io.save_object(I, 'train_densee_indices', ignore=True)
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
+    print('Applying PCA...')
+    pca, D = feature_extraction.pca(D)
+    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
+    temp = time.time()
+
     print('Creating codebook with {} visual words'.format(settings.codebook_size))
-    codebook = bovw.create_codebook(D) #, codebook_name='default_codebook'
+    #gmm = bovw.create_gmm(D, codebook_name='gmm_{}_dense'.format(settings.codebook_size))
+    codebook = bovw.create_codebook(D)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     print('Getting visual words from training set...')
-    vis_words, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True)
+    #fisher, labels = bovw.fisher_vectors(D, L, I, gmm)
+    pyramid, labels = bovw.visual_words(D, L, I, codebook, spatial_pyramid=True)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    pyramid_svm, std_scaler, pca = classification.train_pyramid_svm(vis_words, labels, C=0.0009, dim_reduction=None)
-
+    lin_svm, std_scaler, _ = classification.train_pyramid_svm(pyramid, train_labels, C=0.0009, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -84,9 +89,9 @@ if __name__ == '__main__':
     # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     test_results = joblib.Parallel(n_jobs=settings.n_jobs, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, codebook, pyramid_svm, std_scaler, pca) for
-        test_image, test_label in zip(test_images_filenames, test_labels))
-
+        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler) for
+        test_image, test_label in
+        zip(test_images_filenames, test_labels))
 
     pred_results = [x[0] for x in test_results]
     pred_class = [x[1] for x in test_results]
@@ -103,7 +108,7 @@ if __name__ == '__main__':
     print('\nACCURACY: {:.2f}'.format(accuracy))
     print('\nTOTAL TIME: {:.2f} s'.format(time.time() - start))
 
-    classes = pyramid_svm.classes_
+    classes = lin_svm.classes_
 
     # Create confusion matrix
     conf = confusion_matrix(test_labels, pred_class, labels=classes)

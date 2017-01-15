@@ -1,4 +1,5 @@
 import numpy as np
+import mlcv.settings as settings
 
 MAX_NUM_ELEMS = 1e8
 
@@ -34,10 +35,31 @@ def intersection_kernel(X, Y):
 
     return intersection
 
+
 def pyramid_kernel(X, Y):
-    codebook_size = len(X[0,:])/21
-    intersection = 0
-    for i in range(0,len(X[0,:]),codebook_size):
-        intersection = intersection + intersection_kernel(X[:,i:i+codebook_size], Y[:,i:i+codebook_size])
+
+    # Reverse vectors to start with level 0 (the one with finer grid)
+    settings.pyramid_levels.reverse()
+    X = np.fliplr(X)
+    Y = np.fliplr(Y)
+
+    last_index = 0
+
+    for i in range(0,len(settings.pyramid_levels)):
+
+        num_partitions = settings.pyramid_levels[i][0] * \
+                         settings.pyramid_levels[i][1]
+
+        this_level_intersection = intersection_kernel(
+                            X[:,last_index:last_index+settings.codebook_size*num_partitions],
+                            Y[:,last_index:last_index+settings.codebook_size*num_partitions])
+
+        if i == 0:
+            intersection = this_level_intersection
+        else:
+            intersection += 2**-i * (this_level_intersection - previous_level_intersection)
+
+        previous_level_intersection = this_level_intersection
+        last_index += settings.codebook_size * num_partitions
 
     return intersection

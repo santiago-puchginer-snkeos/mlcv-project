@@ -213,12 +213,6 @@ def train_intersection_svm(X, y, C=1, standardize=True, dim_reduction=None,
 
 def train_pyramid_svm(X, y, C=1, standardize=True, dim_reduction=None,
                            save_scaler=False, save_pca=False, model_name=None):
-    # PCA for dimensionality reduction if necessary
-    pca = None
-    if dim_reduction is not None and dim_reduction > 0:
-        pca = decomposition.PCA(n_components=dim_reduction)
-        pca.fit(X)
-        X = pca.transform(X)
 
     # Standardize the data before classification if necessary
     std_scaler = None
@@ -246,10 +240,7 @@ def train_pyramid_svm(X, y, C=1, standardize=True, dim_reduction=None,
     if save_scaler:
         io.save_object(std_scaler, save_scaler)
 
-    if save_pca:
-        io.save_object(pca, save_pca)
-
-    return clf, std_scaler, pca
+    return clf, std_scaler, None
 
 
 def predict_svm(X, svm, std_scaler=None, pca=None, probability=True):

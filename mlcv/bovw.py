@@ -1,8 +1,13 @@
 import numpy as np
 import sklearn.cluster as cluster
+from libraries.yael.yael import ynumpy
+
 
 import mlcv.input_output as io
 import mlcv.settings as settings
+
+import math
+
 
 
 def create_codebook(X, codebook_name=None, k_means_init='random'):
@@ -92,7 +97,11 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
 
 
 def build_pyramid(prediction, descriptors_indices):
+
     levels = settings.pyramid_levels
+    keypoints_shape = map(int, settings.get_keypoints_shape())
+    kp_i = keypoints_shape[0]
+    kp_j = keypoints_shape[1]
 
     v_words = []
 
@@ -100,30 +109,21 @@ def build_pyramid(prediction, descriptors_indices):
     for i in range(0, descriptors_indices.max() + 1):
 
         image_predictions = prediction[descriptors_indices == i]
-        # image_keypoints = keypoints[descriptors_indices == i]
-
-        im_representation = 0.25 * np.bincount(image_predictions, minlength=settings.codebook_size)
-
-        keypoints_shape = int(settings.get_keypoints_shape())
         image_predictions_grid = np.reshape(image_predictions, keypoints_shape)
-        kp_i = keypoints_shape[0]
-        kp_j = keypoints_shape[1]
+
+        im_representation = []
+
 
         for level in range(0, len(levels)):
             num_rows = levels[level][0]
             num_cols = levels[level][1]
-            step = int(settings.dense_sampling_density)
+            step_i = int(math.ceil(float(kp_i)/float(num_rows)))
+            step_j = int(math.ceil(float(kp_j)/float(num_cols)))
 
-            weight = 0.25
-
-            if level == 1:
-                weight = 0.5
-            for i in range(0, kp_i, step):
-                for j in range(0, kp_j, step):
-                    hist = weight * np.array(
-                        np.bincount(image_predictions_grid[i:i + kp_i / num_rows, j:j + kp_j / num_cols].reshape(-1),
-                                    minlength=k))
-                    im_representation = np.hstack((im_representation, hist))
+            for i in range(0,kp_i,step_i):
+                for j in range(0,kp_j,step_j):
+                    hist = np.array(np.bincount(image_predictions_grid[i:i+step_i, j:j+step_j].reshape(-1), minlength=settings.codebook_size))
+                    im_representation = np.hstack((im_representation,hist))
 
         v_words.append(im_representation)
 
