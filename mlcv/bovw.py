@@ -85,7 +85,7 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
     elif normalization == 'l2':
         fisher_vect = fv / np.linalg.norm(fv, keepdims=True)
     elif normalization == 'power':
-        fisher_vect = np.multiply(np.sign(fv) * np.sqrt(np.absolute(fv)))
+        fisher_vect = np.multiply(np.sign(fv), np.sqrt(np.absolute(fv)))
     else:
         fisher_vect = fv
     labels = [y[descriptors_indices == i][0] for i in
