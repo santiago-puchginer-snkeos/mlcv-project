@@ -1,7 +1,5 @@
 import numpy as np
 import sklearn.cluster as cluster
-#from libraries.yael.yael import ynumpy
-from yael import ynumpy
 
 import mlcv.input_output as io
 import mlcv.settings as settings
@@ -28,6 +26,8 @@ def create_codebook(X, codebook_name=None, k_means_init='random'):
 
 
 def create_gmm(D, codebook_name=None):
+    from libraries.yael.yael import ynumpy
+
     k = settings.codebook_size
     if codebook_name is not None:
         # Try to load a previously trained codebook
@@ -65,6 +65,8 @@ def visual_words(X, y, descriptors_indices, codebook, normalization=None, spatia
 
 
 def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spatial_pyramid=False):
+    from libraries.yael.yael import ynumpy
+
     # Compute Fisher vector for each image (which can have multiple descriptors)
     X = np.float32(X)
     fv = np.array(

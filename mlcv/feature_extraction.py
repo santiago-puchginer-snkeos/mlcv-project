@@ -189,6 +189,7 @@ def dense(gray):
 
 def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
     descriptors = []
+    keypoints = []
     label_per_descriptor = []
     image_id_per_descriptor = []
 
@@ -201,19 +202,22 @@ def seq_dense(list_images_filenames, list_images_labels, num_samples_class=-1):
             descriptors.append(des)
             label_per_descriptor.append(label)
             image_id_per_descriptor.append(i)
+            keypoints.append(np.array(kpt))
 
     # Transform the descriptors and the labels to numpy arrays
     descriptors_matrix = descriptors[0]
+    keypoints_matrix = keypoints[0]
     labels_matrix = np.array([label_per_descriptor[0]] * descriptors[0].shape[0])
     indices_matrix = np.array([image_id_per_descriptor[0]] * descriptors[0].shape[0])
     for i in range(1, len(descriptors)):
         if not descriptors[i] is None:
             descriptors_matrix = np.vstack((descriptors_matrix, descriptors[i]))
+            keypoints_matrix = np.hstack((keypoints_matrix, keypoints[i]))
             labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
             indices_matrix = np.hstack(
                 (indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
-    return descriptors_matrix, labels_matrix, indices_matrix
+    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix
 
 
 def compute_dense(ind, filename, label):
@@ -262,7 +266,7 @@ def parallel_dense(list_images_filenames, list_images_labels, num_samples_class=
         labels_matrix = np.hstack((labels_matrix, np.array([label_per_descriptor[i]] * descriptors[i].shape[0])))
         indices_matrix = np.hstack((indices_matrix, np.array([image_id_per_descriptor[i]] * descriptors[i].shape[0])))
 
-    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix, descriptors
+    return descriptors_matrix, labels_matrix, indices_matrix, keypoints_matrix
 
 
 def pca(descriptors_matrix):

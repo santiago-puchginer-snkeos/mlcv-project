@@ -15,13 +15,12 @@ import mlcv.plotting as plotting
 import mlcv.settings as settings
 
 
-def parallel_testing(test_image, test_label, svm, scaler, gmm, pca):
+def parallel_testing(test_image, test_label, svm, scaler, gmm):
     gray = io.load_grayscale_image(test_image)
-    kpt, des = feature_extraction.dense(gray)
+    kpt, des = feature_extraction.sift(gray)
     labels = np.array([test_label] * des.shape[0])
     ind = np.array([0] * des.shape[0])
 
-    des = pca.transform(des)
     fisher, _ = bovw.fisher_vectors(des, labels, ind, gmm)
 
     prediction_prob = classification.predict_svm(fisher, svm, std_scaler=scaler)
@@ -34,9 +33,8 @@ if __name__ == '__main__':
 
     """ SETTINGS """
     settings.n_jobs = 1
-    settings.codebook_size = 16
+    settings.codebook_size = 32
     settings.dense_sampling_density = 16
-    settings.pca_reduction = 64
 
     start = time.time()
 
@@ -47,30 +45,25 @@ if __name__ == '__main__':
     # Feature extraction with sift
     print('Obtaining dense features...')
     try:
-        D, L, I = io.load_object('train_dense_descriptors', ignore=True), \
-                  io.load_object('train_dense_labels', ignore=True), \
-                  io.load_object('train_dense_indices', ignore=True)
+        D, L, I = io.load_object('train_sift_descriptors', ignore=True), \
+                  io.load_object('train_sift_labels', ignore=True), \
+                  io.load_object('train_sift_indices', ignore=True)
     except IOError:
-        D, L, I, _ = feature_extraction.parallel_dense(train_images_filenames, train_labels,
-                                                       num_samples_class=-1,
-                                                       n_jobs=settings.n_jobs)
-        io.save_object(D, 'train_dense_descriptors', ignore=True)
-        io.save_object(L, 'train_dense_labels', ignore=True)
-        io.save_object(I, 'train_dense_indices', ignore=True)
+        D, L, I, _ = feature_extraction.parallel_sift(train_images_filenames, train_labels,
+                                                      num_samples_class=-1,
+                                                      n_jobs=settings.n_jobs)
+        io.save_object(D, 'train_sift_descriptors', ignore=True)
+        io.save_object(L, 'train_sift_labels', ignore=True)
+        io.save_object(I, 'train_sift_indices', ignore=True)
     print('Elapsed time: {:.2f} s'.format(time.time() - start))
     temp = time.time()
 
-    print('Applying PCA...')
-    pca, D = feature_extraction.pca(D)
+    print('Creating GMM model with {} Gaussians'.format(settings.codebook_size))
+    gmm = bovw.create_gmm(D, codebook_name='gmm_{}'.format(settings.codebook_size))
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
-    print('Creating codebook with {} visual words'.format(settings.codebook_size))
-    gmm = bovw.create_gmm(D, codebook_name='gmm_{}_dense'.format(settings.codebook_size))
-    print('Elapsed time: {:.2f} s'.format(time.time() - temp))
-    temp = time.time()
-
-    print('Getting visual words from training set...')
+    print('Getting Fisher vectors from training set...')
     fisher, labels = bovw.fisher_vectors(D, L, I, gmm)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
@@ -88,7 +81,7 @@ if __name__ == '__main__':
     # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     test_results = joblib.Parallel(n_jobs=settings.n_jobs, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, gmm, pca) for
+        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, gmm) for
         test_image, test_label in
         zip(test_images_filenames, test_labels))
 
