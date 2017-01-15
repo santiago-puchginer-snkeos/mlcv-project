@@ -36,12 +36,12 @@ def train():
 
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
-    print('Loaded {} train images.'.format(len(train_images_filenames)))
+    io.log('Loaded {} train images.'.format(len(train_images_filenames)))
 
     # Parameter sweep for dense SIFT
     for ds in dense_sampling_density:
 
-        print('Obtaining dense features with sampling parameter {}...'.format(ds))
+        io.log('Obtaining dense features with sampling parameter {}...'.format(ds))
         start_sift = time.time()
         settings.dense_sampling_density = ds
         try:
@@ -56,13 +56,13 @@ def train():
             io.save_object(L, 'train_dense_labels_{}'.format(settings.dense_sampling_density), ignore=True)
             io.save_object(I, 'train_dense_indices_{}'.format(settings.dense_sampling_density), ignore=True)
         sift_time = time.time() - start_sift
-        print('Elapsed time: {:.2f} s'.format(sift_time))
+        io.log('Elapsed time: {:.2f} s'.format(sift_time))
 
 
         # Parameter sweep for codebook size
         for k in codebook_size:
 
-            print('Creating GMM model (k={})'.format(settings.codebook_size))
+            io.log('Creating GMM model (k={})'.format(settings.codebook_size))
             start_gmm = time.time()
             settings.codebook_size = k
             gmm = bovw.create_gmm(D, 'gmm_{}_dense_{}'.format(
@@ -70,22 +70,22 @@ def train():
                 ds,
             ))
             gmm_time = time.time() - start_gmm
-            print('Elapsed time: {:.2f} s'.format(gmm_time))
+            io.log('Elapsed time: {:.2f} s'.format(gmm_time))
 
-            print('Getting visual words from training set...')
+            io.log('Getting visual words from training set...')
             start_fisher = time.time()
             fisher, labels = bovw.fisher_vectors(D, L, I, gmm, normalization='l2')
             fisher_time = time.time() - start_fisher
-            print('Elapsed time: {:.2f} s'.format(fisher_time))
+            io.log('Elapsed time: {:.2f} s'.format(fisher_time))
 
-            print('Scaling features...')
+            io.log('Scaling features...')
             start_scaler = time.time()
             std_scaler = StandardScaler().fit(fisher)
             vis_words = std_scaler.transform(fisher)
             scaler_time = time.time() - start_scaler
-            print('Elapsed time: {:.2f} s'.format(scaler_time))
+            io.log('Elapsed time: {:.2f} s'.format(scaler_time))
 
-            print('Optimizing SVM hyperparameters...')
+            io.log('Optimizing SVM hyperparameters...')
             start_crossvalidation = time.time()
             svm = SVC(kernel='precomputed')
             random_search = RandomizedSearchCV(
@@ -102,7 +102,7 @@ def train():
             gram = kernels.intersection_kernel(vis_words, vis_words)
             random_search.fit(gram, labels)
             crossvalidation_time = time.time() - start_crossvalidation
-            print('Elapsed time: {:.2f} s'.format(crossvalidation_time))
+            io.log('Elapsed time: {:.2f} s'.format(crossvalidation_time))
 
             # Convert MaskedArrays to ndarrays to avoid unpickling bugs
             results = random_search.cv_results_
@@ -128,35 +128,35 @@ def train():
                 best_params = random_search.best_params_
                 best_params.update({'k': k, 'dense_grid': ds})
 
-            print('-------------------------------\n')
+            io.log('-------------------------------\n')
 
-    print('\nBEST PARAMS')
-    print('k={}, C={}, dim_red={}, dense_grid={} --> accuracy: {:.3f}'.format(
+    io.log('\nBEST PARAMS')
+    io.log('k={}, C={}, dim_red={}, dense_grid={} --> accuracy: {:.3f}'.format(
         best_params['k'],
         best_params['C'],
         best_params['ds'],
         best_accuracy
     ))
 
-    print('\nSaving best parameters...')
+    io.log('\nSaving best parameters...')
     io.save_object(best_params, 'best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
     best_params_file = os.path.abspath('./ignore/best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca.pickle')
-    print('Saved at {}'.format(best_params_file))
+    io.log('Saved at {}'.format(best_params_file))
 
-    print('\nSaving all cross-validation values...')
+    io.log('\nSaving all cross-validation values...')
     io.save_object(cv_results, 'intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
     cv_results_file = os.path.abspath('./ignore/intersection_svm_optimization_fisher_vectors_l2_no_pca.pickle')
-    print('Saved at {}'.format(cv_results_file))
+    io.log('Saved at {}'.format(cv_results_file))
 
 
 def plot_curve():
-    print('Loading cross-validation values...')
+    io.log('Loading cross-validation values...')
     cv_values = io.load_object('intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
 
-    print('Loading best parameters...')
+    io.log('Loading best parameters...')
     best_params = io.load_object('best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
 
-    print('Plotting...')
+    io.log('Plotting...')
     colors = itertools.cycle(
         ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
     )
@@ -198,21 +198,21 @@ def plot_curve():
         ax.set_ylabel('Accuracy')
 
         # Print information
-        print('CODEBOOK {} '.format(k))
-        print('-------------')
-        print('Mean accuracy: {}'.format(y.max()))
-        print('Std accuracy: {}'.format(e[np.argmax(y)]))
-        print('C: {}'.format(x[np.argmax(y)]))
-        print()
-        print('Timing')
-        print('\tSIFT time: {:.2f} s'.format(sift_time))
-        print('\tGMM time: {:.2f} s'.format(gmm_time))
-        print('\tFisher time: {:.2f} s'.format(fisher_time))
-        print('\tScaler time: {:.2f} s'.format(scaler_time))
-        print('\tCV time: {:.2f} s'.format(crossvalidation_time))
-        print('\t_________________________')
-        print('\tTOTAL TIME: {:.2f} s'.format(total_time))
-        print()
+        io.log('CODEBOOK {} '.format(k))
+        io.log('-------------')
+        io.log('Mean accuracy: {}'.format(y.max()))
+        io.log('Std accuracy: {}'.format(e[np.argmax(y)]))
+        io.log('C: {}'.format(x[np.argmax(y)]))
+        io.log()
+        io.log('Timing')
+        io.log('\tSIFT time: {:.2f} s'.format(sift_time))
+        io.log('\tGMM time: {:.2f} s'.format(gmm_time))
+        io.log('\tFisher time: {:.2f} s'.format(fisher_time))
+        io.log('\tScaler time: {:.2f} s'.format(scaler_time))
+        io.log('\tCV time: {:.2f} s'.format(crossvalidation_time))
+        io.log('\t_________________________')
+        io.log('\tTOTAL TIME: {:.2f} s'.format(total_time))
+        io.log()
     plt.tight_layout()
     plt.show()
     plt.close()

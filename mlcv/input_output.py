@@ -1,4 +1,5 @@
 import os
+import sys
 
 import cv2
 
@@ -95,3 +96,13 @@ def load_object(model_name, ignore=False):
             obj = pickle.load(f)
 
     return obj
+
+
+def log(message='', out='stdout'):
+    if out == 'stderr':
+        sys.stderr.write('{}\n'.format(message))
+        sys.stderr.flush()
+    else:
+        sys.stdout.write('{}\n'.format(message))
+        sys.stdout.flush()
+
