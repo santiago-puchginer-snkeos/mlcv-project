@@ -18,7 +18,7 @@ import mlcv.kernels as kernels
 import mlcv.settings as settings
 
 """ PARAMETER SWEEP """
-dense_sampling_density = [2, 4, 8, 16]
+dense_sampling_density = [ 8, 16]
 codebook_size = [16, 32, 64]
 params_distribution = {
     'C': np.logspace(-3, 1, 10 ** 6)
