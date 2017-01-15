@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 import argparse
 import itertools
-import time
 import os
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ codebook_size = [16, 32, 64]
 params_distribution = {
     'C': np.logspace(-3, 1, 10 ** 6)
 }
-n_iter = 20
+n_iter = 40
 
 
 def train():
@@ -32,7 +32,7 @@ def train():
     cv_results = {}
 
     """ SETTINGS """
-    settings.n_jobs = 2
+    settings.n_jobs = 1
 
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
@@ -58,11 +58,10 @@ def train():
         sift_time = time.time() - start_sift
         io.log('Elapsed time: {:.2f} s'.format(sift_time))
 
-
         # Parameter sweep for codebook size
         for k in codebook_size:
 
-            io.log('Creating GMM model (k={})'.format(settings.codebook_size))
+            io.log('Creating GMM model (k={})'.format(k))
             start_gmm = time.time()
             settings.codebook_size = k
             gmm = bovw.create_gmm(D, 'gmm_{}_dense_{}'.format(
@@ -72,7 +71,7 @@ def train():
             gmm_time = time.time() - start_gmm
             io.log('Elapsed time: {:.2f} s'.format(gmm_time))
 
-            io.log('Getting visual words from training set...')
+            io.log('Getting Fisher vectors from training set...')
             start_fisher = time.time()
             fisher, labels = bovw.fisher_vectors(D, L, I, gmm, normalization='l2')
             fisher_time = time.time() - start_fisher
@@ -126,27 +125,28 @@ def train():
             if random_search.best_score_ > best_accuracy:
                 best_accuracy = random_search.best_score_
                 best_params = random_search.best_params_
-                best_params.update({'k': k, 'dense_grid': ds})
+                best_params.update({'k': k, 'ds': ds})
 
             io.log('-------------------------------\n')
 
-    io.log('\nBEST PARAMS')
-    io.log('k={}, C={}, dim_red={}, dense_grid={} --> accuracy: {:.3f}'.format(
-        best_params['k'],
-        best_params['C'],
-        best_params['ds'],
-        best_accuracy
-    ))
-
     io.log('\nSaving best parameters...')
     io.save_object(best_params, 'best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
-    best_params_file = os.path.abspath('./ignore/best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca.pickle')
+    best_params_file = os.path.abspath(
+        './ignore/best_params_intersection_svm_optimization_fisher_vectors_l2_no_pca.pickle')
     io.log('Saved at {}'.format(best_params_file))
 
     io.log('\nSaving all cross-validation values...')
     io.save_object(cv_results, 'intersection_svm_optimization_fisher_vectors_l2_no_pca', ignore=True)
     cv_results_file = os.path.abspath('./ignore/intersection_svm_optimization_fisher_vectors_l2_no_pca.pickle')
     io.log('Saved at {}'.format(cv_results_file))
+
+    io.log('\nBEST PARAMS')
+    io.log('k={}, C={}, dense_grid={} --> accuracy: {:.3f}'.format(
+        best_params['k'],
+        best_params['C'],
+        best_params['ds'],
+        best_accuracy
+    ))
 
 
 def plot_curve():

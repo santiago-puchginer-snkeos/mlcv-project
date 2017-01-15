@@ -24,7 +24,7 @@ pca_reduction = [60, 80, 100, 120]
 params_distribution = {
     'C': np.logspace(-3, 1, 10 ** 6)
 }
-n_iter = 20
+n_iter = 40
 
 
 def train():
@@ -33,7 +33,7 @@ def train():
     cv_results = {}
 
     """ SETTINGS """
-    settings.n_jobs = 2
+    settings.n_jobs = 1
 
     # Read the training set
     train_images_filenames, train_labels = io.load_training_set()
@@ -65,17 +65,17 @@ def train():
             io.log('Applying PCA (dim = {})...'.format(dim_red))
             start_pca = time.time()
             settings.pca_reduction = dim_red
-            pca, D = feature_extraction.pca(D)
+            pca, D_pca = feature_extraction.pca(D)
             pca_time = time.time() - start_pca
             io.log('Elapsed time: {:.2f} s'.format(pca_time))
 
             # Parameter sweep for codebook size
             for k in codebook_size:
 
-                io.log('Creating GMM model (k={})'.format(settings.codebook_size))
+                io.log('Creating GMM model (k = {})'.format(k))
                 start_gmm = time.time()
                 settings.codebook_size = k
-                gmm = bovw.create_gmm(D, 'gmm_{}_dense_{}_pca_{}'.format(
+                gmm = bovw.create_gmm(D_pca, 'gmm_{}_dense_{}_pca_{}'.format(
                     k,
                     ds,
                     dim_red
@@ -83,9 +83,9 @@ def train():
                 gmm_time = time.time() - start_gmm
                 io.log('Elapsed time: {:.2f} s'.format(gmm_time))
 
-                io.log('Getting visual words from training set...')
+                io.log('Getting Fisher vectors from training set...')
                 start_fisher = time.time()
-                fisher, labels = bovw.fisher_vectors(D, L, I, gmm, normalization='power')
+                fisher, labels = bovw.fisher_vectors(D_pca, L, I, gmm, normalization='power')
                 fisher_time = time.time() - start_fisher
                 io.log('Elapsed time: {:.2f} s'.format(fisher_time))
 
@@ -138,18 +138,9 @@ def train():
                 if random_search.best_score_ > best_accuracy:
                     best_accuracy = random_search.best_score_
                     best_params = random_search.best_params_
-                    best_params.update({'k': k, 'pca': dim_red, 'dense_grid': ds})
+                    best_params.update({'k': k, 'pca': dim_red, 'ds': ds})
 
                 io.log('-------------------------------\n')
-
-    io.log('\nBEST PARAMS')
-    io.log('k={}, C={}, dim_red={}, dense_grid={} --> accuracy: {:.3f}'.format(
-        best_params['k'],
-        best_params['C'],
-        best_params['pca'],
-        best_params['ds'],
-        best_accuracy
-    ))
 
     io.log('\nSaving best parameters...')
     io.save_object(best_params, 'best_params_intersection_svm_optimization_fisher_vectors_power', ignore=True)
@@ -160,6 +151,15 @@ def train():
     io.save_object(cv_results, 'intersection_svm_optimization_fisher_vectors_power', ignore=True)
     cv_results_file = os.path.abspath('./ignore/intersection_svm_optimization_fisher_vectors_power.pickle')
     io.log('Saved at {}'.format(cv_results_file))
+
+    io.log('\nBEST PARAMS')
+    io.log('k={}, C={}, dim_red={}, dense_grid={} --> accuracy: {:.3f}'.format(
+        best_params['k'],
+        best_params['C'],
+        best_params['pca'],
+        best_params['ds'],
+        best_accuracy
+    ))
 
 
 def plot_curve():
