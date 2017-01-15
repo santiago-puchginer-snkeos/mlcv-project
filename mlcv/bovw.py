@@ -1,13 +1,10 @@
+import math
+
 import numpy as np
 import sklearn.cluster as cluster
-from libraries.yael.yael import ynumpy
-
 
 import mlcv.input_output as io
 import mlcv.settings as settings
-
-import math
-
 
 
 def create_codebook(X, codebook_name=None, k_means_init='random'):
@@ -88,7 +85,7 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
     elif normalization == 'l2':
         fisher_vect = fv / np.linalg.norm(fv, keepdims=True)
     elif normalization == 'power':
-        fisher_vect = np.multiply(np.sign(fv)* np.sqrt(np.absolute(fv)))
+        fisher_vect = np.multiply(np.sign(fv) * np.sqrt(np.absolute(fv)))
     else:
         fisher_vect = fv
     labels = [y[descriptors_indices == i][0] for i in
@@ -97,7 +94,6 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
 
 
 def build_pyramid(prediction, descriptors_indices):
-
     levels = settings.pyramid_levels
     keypoints_shape = map(int, settings.get_keypoints_shape())
     kp_i = keypoints_shape[0]
@@ -113,17 +109,17 @@ def build_pyramid(prediction, descriptors_indices):
 
         im_representation = []
 
-
         for level in range(0, len(levels)):
             num_rows = levels[level][0]
             num_cols = levels[level][1]
-            step_i = int(math.ceil(float(kp_i)/float(num_rows)))
-            step_j = int(math.ceil(float(kp_j)/float(num_cols)))
+            step_i = int(math.ceil(float(kp_i) / float(num_rows)))
+            step_j = int(math.ceil(float(kp_j) / float(num_cols)))
 
-            for i in range(0,kp_i,step_i):
-                for j in range(0,kp_j,step_j):
-                    hist = np.array(np.bincount(image_predictions_grid[i:i+step_i, j:j+step_j].reshape(-1), minlength=settings.codebook_size))
-                    im_representation = np.hstack((im_representation,hist))
+            for i in range(0, kp_i, step_i):
+                for j in range(0, kp_j, step_j):
+                    hist = np.array(np.bincount(image_predictions_grid[i:i + step_i, j:j + step_j].reshape(-1),
+                                                minlength=settings.codebook_size))
+                    im_representation = np.hstack((im_representation, hist))
 
         v_words.append(im_representation)
 
