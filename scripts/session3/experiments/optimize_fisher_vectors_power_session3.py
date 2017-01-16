@@ -177,6 +177,12 @@ def plot_curve():
     best_pca = best_params['pca']
     best_ds = best_params['ds']
 
+    io.log()
+    io.log('BEST PARAMETERS')
+    io.log('PCA = {}'.format(best_pca))
+    io.log('Dense sampling = {}'.format(best_ds))
+    io.log()
+
     # Subplot parameters
     plt.figure(figsize=(20, 10), dpi=200, facecolor='white')
     num_subplots = len(codebook_size)
@@ -207,6 +213,7 @@ def plot_curve():
         color = colors.next()
         ax = plt.subplot(num_rows, num_columns, ind + 1)
         ax.set_xscale("log")
+        ax.set_ylim((0.7, 0.9))
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} Gaussians in GMM'.format(k))
         ax.set_xlabel('C')

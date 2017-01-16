@@ -163,8 +163,14 @@ def plot_curve():
 
     best_ds = best_params['ds']
 
+    io.log()
+    io.log('BEST PARAMETERS')
+    io.log('Dense sampling = {}'.format(best_ds))
+    io.log()
+
     # Subplot parameters
     plt.figure(figsize=(20, 10), dpi=200, facecolor='white')
+    plt.title('Fisher vectors, L2 normalization, Dense sampling parameter = {}'.format(best_ds))
     num_subplots = len(codebook_size)
     num_columns = 2
     num_rows = np.ceil(num_subplots / num_columns)
@@ -192,6 +198,7 @@ def plot_curve():
         color = colors.next()
         ax = plt.subplot(num_rows, num_columns, ind + 1)
         ax.set_xscale("log")
+        ax.set_ylim((0.6, 0.9))
         ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
         ax.set_title('{} Gaussians in GMM'.format(k))
         ax.set_xlabel('C')
