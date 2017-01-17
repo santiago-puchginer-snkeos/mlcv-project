@@ -34,7 +34,7 @@ if __name__ == '__main__':
     """ SETTINGS """
     settings.n_jobs = 1
     settings.codebook_size = 32
-    settings.dense_sampling_density = 16
+    settings.dense_sampling_density = 8
 
     start = time.time()
 

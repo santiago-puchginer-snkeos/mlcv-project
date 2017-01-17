@@ -71,13 +71,16 @@ def fisher_vectors(X, y, descriptors_indices, codebook, normalization=None, spat
 
     # Compute Fisher vector for each image (which can have multiple descriptors)
     X = np.float32(X)
-    fv = np.array(
-        [ynumpy.fisher(
-            codebook,
-            X[descriptors_indices == i],
-            include=['mu', 'sigma']) for i in range(0, descriptors_indices.max() + 1)]
-    )
-    # TODO: Spatial Pyramid Option
+
+    if not spatial_pyramid:
+        fv = np.array(
+            [ynumpy.fisher(
+                codebook,
+                X[descriptors_indices == i],
+                include=['mu', 'sigma']) for i in range(0, descriptors_indices.max() + 1)]
+        )
+    else:
+        fv = build_fisher_pyramid(X, descriptors_indices, codebook)
 
     # Normalization
     if normalization == 'l1':
@@ -124,3 +127,45 @@ def build_pyramid(prediction, descriptors_indices):
         v_words.append(im_representation)
 
     return np.array(v_words, dtype=np.float64)
+
+
+
+def build_fisher_pyramid(X, descriptors_indices, codebook):
+    from libraries.yael.yael import ynumpy
+
+    levels = settings.pyramid_levels
+    keypoints_shape = map(int, settings.get_keypoints_shape())
+    kp_i = keypoints_shape[0]
+    kp_j = keypoints_shape[1]
+
+    fisher_pyramid = []
+    if settings.pca_reduction is None:
+        keypoints_shape.append(128)
+    else:
+        keypoints_shape.append(settings.pca_reduction)
+
+    # Build representation for each image
+    for i in range(0, descriptors_indices.max() + 1):
+
+        image_X = X[descriptors_indices == i]
+        image_X_grid = np.reshape(image_X, keypoints_shape)
+
+        im_representation = []
+
+        for level in range(0, len(levels)):
+            num_rows = levels[level][0]
+            num_cols = levels[level][1]
+            step_i = int(math.ceil(float(kp_i) / float(num_rows)))
+            step_j = int(math.ceil(float(kp_j) / float(num_cols)))
+
+            for i in range(0, kp_i, step_i):
+                for j in range(0, kp_j, step_j):
+                    fv = np.array(ynumpy.fisher(
+                            codebook,
+                            np.reshape(image_X_grid[i:i + step_i, j:j + step_j], np.array((step_i*step_j,keypoints_shape[2]))),
+                            include=['mu', 'sigma']))
+                    im_representation = np.hstack((im_representation, fv))
+
+        fisher_pyramid.append(im_representation)
+
+    return np.array(fisher_pyramid, dtype=np.float64)
