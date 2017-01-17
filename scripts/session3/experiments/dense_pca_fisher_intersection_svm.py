@@ -34,9 +34,11 @@ if __name__ == '__main__':
 
     """ SETTINGS """
     settings.n_jobs = 1
-    settings.codebook_size = 32
-    settings.dense_sampling_density = 16
-    settings.pca_reduction = 64
+    # Optimal parameters
+    C = 2.1539
+    settings.codebook_size = 64
+    settings.dense_sampling_density = 8
+    settings.pca_reduction = 60
 
     start = time.time()
 
@@ -77,7 +79,7 @@ if __name__ == '__main__':
 
     # Train Linear SVM classifier
     print('Training the SVM classifier...')
-    lin_svm, std_scaler, _ = classification.train_linear_svm(fisher, train_labels, C=1, dim_reduction=None)
+    svm, std_scaler, pca = classification.train_intersection_svm(fisher, labels, C=C, dim_reduction=None)
     print('Elapsed time: {:.2f} s'.format(time.time() - temp))
     temp = time.time()
 
@@ -88,7 +90,7 @@ if __name__ == '__main__':
     # Feature extraction with sift, prediction with SVM and aggregation to obtain final class
     print('Predicting test data...')
     test_results = joblib.Parallel(n_jobs=settings.n_jobs, backend='threading')(
-        joblib.delayed(parallel_testing)(test_image, test_label, lin_svm, std_scaler, gmm, pca) for
+        joblib.delayed(parallel_testing)(test_image, test_label, svm, std_scaler, gmm, pca) for
         test_image, test_label in
         zip(test_images_filenames, test_labels))
 
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     print('\nACCURACY: {:.2f}'.format(accuracy))
     print('\nTOTAL TIME: {:.2f} s'.format(time.time() - start))
 
-    classes = lin_svm.classes_
+    classes = svm.classes_
 
     # Create confusion matrix
     conf = confusion_matrix(test_labels, pred_class, labels=classes)
