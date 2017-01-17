@@ -160,9 +160,11 @@ def build_fisher_pyramid(X, descriptors_indices, codebook):
 
             for i in range(0, kp_i, step_i):
                 for j in range(0, kp_j, step_j):
+                    im_patch = image_X_grid[i:i + step_i, j:j + step_j]
+
                     fv = np.array(ynumpy.fisher(
                             codebook,
-                            np.reshape(image_X_grid[i:i + step_i, j:j + step_j], np.array((step_i*step_j,keypoints_shape[2]))),
+                            np.reshape(im_patch, np.array((len(im_patch)*len(im_patch[0]),keypoints_shape[2]))),
                             include=['mu', 'sigma']))
                     im_representation = np.hstack((im_representation, fv))
 
