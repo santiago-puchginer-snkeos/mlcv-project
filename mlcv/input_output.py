@@ -1,7 +1,7 @@
 import os
 import sys
 
-import cv2
+#import cv2
 
 try:
     import cPickle as pickle
@@ -45,14 +45,16 @@ def load_test_set():
     return train_images_filenames, train_labels
 
 
-def load_image(image):
-    return cv2.imread(image)
-
-
-def load_grayscale_image(image):
-    ima = cv2.imread(image)
-    return cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
-
+#==============================================================================
+# def load_image(image):
+#     return cv2.imread(image)
+# 
+# 
+# def load_grayscale_image(image):
+#     ima = cv2.imread(image)
+#     return cv2.cvtColor(ima, cv2.COLOR_BGR2GRAY)
+# 
+#==============================================================================
 
 def save_object(obj, model_name, ignore=False):
     """
