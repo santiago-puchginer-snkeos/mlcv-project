@@ -22,9 +22,9 @@ dense_sampling_density = [8, 16]
 codebook_size = [16, 32, 64]
 pca_reduction = [60, 80, 100, 120]
 params_distribution = {
-    'C': np.logspace(-3, 1, 10 ** 6)
+    'C': np.logspace(-5, 3, 10 ** 6)
 }
-n_iter = 40
+n_iter = 50
 
 
 def train():

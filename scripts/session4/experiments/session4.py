@@ -50,22 +50,25 @@ io.log('Loaded {} train images.'.format(len(train_images_filenames)))
 k = 32
 
 
-# load VGG model
-base_model = VGG16(weights='imagenet')
-
-# visualize topology in an image
-plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 
-# crop the model up to a certain layer
-model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
 print('Obtaining features...')
 try:
     D, L, I = io.load_object('train_CNN_descriptors', ignore=True), \
               io.load_object('train_CNN_labels', ignore=True), \
               io.load_object('train_CNN_indices', ignore=True)
 except IOError:
+    # load VGG model
+    base_model = VGG16(weights='imagenet')
+
+    # visualize topology in an image
+    plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
+
+    # crop the model up to a certain layer
+    model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
     D, L, I, _ = feature_extraction.parallel_CNN_features(train_images_filenames, train_labels,
                                                    num_samples_class=-1,
                                                    n_jobs=settings.n_jobs)
@@ -118,3 +121,6 @@ print('\nACCURACY: {:.2f}'.format(accuracy))
 #    pass
 
 #weights = base_model.get_layer('block1_conv1').get_weights()
+
+
+
