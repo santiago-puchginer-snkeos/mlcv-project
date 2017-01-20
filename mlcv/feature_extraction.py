@@ -280,7 +280,7 @@ def pca(descriptors_matrix):
     return pca, descriptors_matrix
 
     
-def compute_CNN_features(filename, model):
+def compute_CNN_features(ind, filename, label, model):
 
     img = image.load_img(filename, target_size=(224, 224))
     x = image.img_to_array(img)
@@ -292,7 +292,7 @@ def compute_CNN_features(filename, model):
     features = features.reshape(14, 14, 16, 32).swapaxes(1, 2).reshape(14 * 14, 512)
     features = features.transpose()
 
-    return features
+    return features, label, ind
 
 
 def parallel_CNN_features(list_images_filenames, list_images_labels, model, num_samples_class=-1, n_jobs=settings.n_jobs):
@@ -312,7 +312,7 @@ def parallel_CNN_features(list_images_filenames, list_images_labels, model, num_
         list_images_labels = iterable_labels_images
 
     res = joblib.Parallel(n_jobs=n_jobs, backend='threading')(
-        joblib.delayed(compute_CNN_features)(filename, model) for i, (filename, label) in
+        joblib.delayed(compute_CNN_features)(i, filename, label, model) for i, (filename, label) in
         enumerate(zip(list_images_filenames, list_images_labels))
     )
 
