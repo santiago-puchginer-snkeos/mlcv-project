@@ -301,7 +301,7 @@ def compute_CNN_features(filename, model):
     features = features.reshape(14, 14, 16, 32).swapaxes(1, 2).reshape(14 * 14, 512)
     features = features.transpose()
 
-    return features
+    return features, label, ind
 
 
 def parallel_CNN_features(list_images_filenames, list_images_labels, model, num_samples_class=-1, n_jobs=settings.n_jobs):
