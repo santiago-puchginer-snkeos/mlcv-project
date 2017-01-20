@@ -323,7 +323,7 @@ def parallel_CNN_features(list_images_filenames, list_images_labels, model, num_
 
     res = joblib.Parallel(n_jobs=n_jobs, backend='threading')(
 
-        joblib.delayed(compute_CNN_features)(filename, model) for i, (filename, label) in
+        joblib.delayed(compute_CNN_features)(i, filename, label, model) for i, (filename, label) in
         enumerate(zip(list_images_filenames, list_images_labels))
     )
 
