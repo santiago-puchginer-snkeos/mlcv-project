@@ -289,7 +289,7 @@ def CNN_features(x, model):
     
 
     
-def compute_CNN_features(filename, model):
+def compute_CNN_features(ind, filename, label, model):
 
     img = image.load_img(filename, target_size=(224, 224))
     x = image.img_to_array(img)
