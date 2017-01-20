@@ -19,7 +19,7 @@ import joblib
 
 
 def parallel_testing(test_image, test_label, svm, scaler, gmm, model, pca):
-    D, _, _ = feature_extraction.compute_CNN_features(_, test_image, _, model)
+    D, _, _ = feature_extraction.compute_CNN_features( None , test_image, None, model)
     D_pca = pca.transform(D)
     D_pca = np.float32(D_pca)
     labels = np.array([test_label] * D.shape[0])
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                   io.load_object('train_CNN_indices', ignore=True)
     except IOError:
 
-        D, L, I, _ = feature_extraction.parallel_CNN_features(train_images_filenames, train_labels,
+        D, L, I = feature_extraction.parallel_CNN_features(train_images_filenames, train_labels,
                                                               num_samples_class=-1,
                                                               model=model,
                                                               n_jobs=settings.n_jobs)
