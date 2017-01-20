@@ -19,22 +19,17 @@ import joblib
 
 
 def parallel_testing(test_image, test_label, svm, scaler, gmm, model, pca):
-    img = image.load_img(test_image, target_size=(224, 224))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
-    D = feature_extraction.CNN_features(x, model)
+    D = feature_extraction.compute_CNN_features(test_image, model)
     D_pca = pca.transform(D)
+    D_pca = np.float32(D_pca)
     labels = np.array([test_label] * D.shape[0])
     ind = np.array([0] * D.shape[0])
-    fisher, _ = bovw.fisher_vectors(D_pca, labels, ind, gmm, normalization='l2', spatial_pyramid=False)
-    vis_words = scaler.transform(fisher)
-    prediction_prob = classification.predict_svm(vis_words, svm, std_scaler=scaler)
+    fisher, _ = bovw.fisher_vectors(D_pca, labels, ind, gmm, normalization='l2')
+    prediction_prob = classification.predict_svm(fisher, svm, std_scaler=scaler)
     #print prediction_prob
     #print prediction_prob.shape
     predicted_class = svm.classes_[np.argmax(prediction_prob)]
     return predicted_class == test_label, predicted_class, np.ravel(prediction_prob)
-
 
 
 best_accuracy = 0
@@ -43,17 +38,23 @@ cv_results = {}
 
 """ SETTINGS """
 settings.n_jobs = 1
+settings.codebook_size = 32
+
 
 # Read the training set
 train_images_filenames, train_labels = io.load_training_set()
 io.log('Loaded {} train images.'.format(len(train_images_filenames)))
-k = 32
 
 
-import numpy as np
-import matplotlib.pyplot as plt
+print('Loading VGG model...')
+# load VGG model
+base_model = VGG16(weights='imagenet')
 
+# visualize topology in an image
+plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
 
+# crop the model up to a certain layer
+model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
 
 print('Obtaining features...')
 try:
@@ -61,16 +62,10 @@ try:
               io.load_object('train_CNN_labels', ignore=True), \
               io.load_object('train_CNN_indices', ignore=True)
 except IOError:
-    # load VGG model
-    base_model = VGG16(weights='imagenet')
 
-    # visualize topology in an image
-    plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
-
-    # crop the model up to a certain layer
-    model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
     D, L, I, _ = feature_extraction.parallel_CNN_features(train_images_filenames, train_labels,
                                                    num_samples_class=-1,
+                                                   model=model,
                                                    n_jobs=settings.n_jobs)
     io.save_object(D, 'train_CNN_descriptors', ignore=True)
     io.save_object(L, 'train_CNN_labels', ignore=True)
@@ -81,7 +76,7 @@ except IOError:
 settings.pca_reduction = D.shape[1]/2
 pca, D_pca = feature_extraction.pca(D)
 
-settings.codebook_size = k
+k = settings.codebook_size
 gmm = bovw.create_gmm(D_pca, 'gmm_{}_CNNfeature'.format(k))
 fisher, labels = bovw.fisher_vectors(D_pca, L, I, gmm, normalization='l2', spatial_pyramid=False)
 #std_scaler = StandardScaler().fit(fisher)
@@ -115,7 +110,7 @@ accuracy = num_correct * 100.0 / len(test_images_filenames)
 # Show results and timing
 print('\nACCURACY: {:.2f}'.format(accuracy))
 
-            
+
 #if K.image_dim_ordering() == 'th':
     # theano and thensorflow deal with tensor in different order
 #    pass

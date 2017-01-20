@@ -5,6 +5,8 @@ import sklearn.svm as svm
 import mlcv.input_output as io
 import mlcv.kernels as kernels
 
+import numpy as np
+
 
 def train_linear_svm(X, y, C=1, standardize=True, dim_reduction=23, save_scaler=False, save_pca=False,
                      model_name=None, liblinear=False):
@@ -247,6 +249,7 @@ def predict_svm(X, svm, std_scaler=None, pca=None, probability=True):
     # Apply PCA if available
     if pca is not None:
         X = pca.transform(X)
+        X = np.float32(X)
 
     # Standardize data
     if std_scaler is None:
