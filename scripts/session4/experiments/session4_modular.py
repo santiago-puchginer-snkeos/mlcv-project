@@ -19,7 +19,7 @@ import joblib
 
 
 def parallel_testing(test_image, test_label, svm, scaler, gmm, model, pca):
-    D = feature_extraction.compute_CNN_features(test_image, model)
+    D, _, _ = feature_extraction.compute_CNN_features(_, test_image, _, model)
     D_pca = pca.transform(D)
     D_pca = np.float32(D_pca)
     labels = np.array([test_label] * D.shape[0])
