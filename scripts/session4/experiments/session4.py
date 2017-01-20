@@ -6,7 +6,7 @@ from keras import backend as K
 from keras.utils.visualize_util import plot
 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 # load VGG model
 base_model = VGG16(weights='imagenet')
@@ -24,10 +24,13 @@ x = preprocess_input(x)
 # crop the model up to a certain layer
 model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
 
+
 # get the features from images
 features = model.predict(x)
+
 if K.image_dim_ordering() == 'th':
     # theano and thensorflow deal with tensor in different order
     pass
 
 weights = base_model.get_layer('block1_conv1').get_weights()
+
