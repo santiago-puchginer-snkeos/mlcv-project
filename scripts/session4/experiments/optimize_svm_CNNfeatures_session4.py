@@ -1,7 +1,7 @@
-#from keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import VGG16
 #from keras.preprocessing import image
 #from keras.applications.vgg19 import preprocess_input
-#from keras.models import Model
+from keras.models import Model
 #from keras import backend as K
 #from keras.utils.visualize_util import plot
 
@@ -16,7 +16,7 @@ import mlcv.bovw as bovw
 import mlcv.input_output as io
 import mlcv.classification as classification
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -57,7 +57,7 @@ def train():
         # io.save_object(base_model, 'base_model', ignore=True)
 
         # visualize topology in an image
-        plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
+        #plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
 
         # crop the model up to a certain layer
         model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
@@ -235,7 +235,7 @@ def plot_curve():
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 
