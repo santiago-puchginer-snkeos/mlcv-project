@@ -124,10 +124,9 @@ if __name__ == '__main__':
     print 'Final accuracy: ' + str(accuracy)
     classes = clf.classes_
     predicted_prob = clf.predict_proba(fisher_test)
-    print (np.transpose(predicted_prob.shape))
     pred_prob = np.ravel(predicted_prob)
     print (pred_prob.shape)
-    pred_class = clf.classes_[np.argmax(np.transpose(predicted_prob))]
+    pred_class = clf.classes_[np.argmax((predicted_prob))]
     print(pred_class.shape)
 
     # Create confusion matrix
