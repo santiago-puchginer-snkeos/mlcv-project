@@ -8,7 +8,8 @@ from keras.utils.visualize_util import plot
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle
-
+from sklearn.metrics import confusion_matrix, auc, roc_curve
+from sklearn.preprocessing import label_binarize
 import mlcv.input_output  as io
 import mlcv.kernels as kernels
 from libraries.yael.yael import ynumpy
@@ -16,14 +17,15 @@ from sklearn import svm
 from sklearn.preprocessing import StandardScaler
 import sklearn.decomposition as decomposition
 import sklearn.preprocessing as preprocessing
+import mlcv.plotting as plotting
 
 
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
 
     k = 32
-    C=1
-    pca_reduction = 256
+    C=0.0428307453111
+    pca_reduction = 52
 
     # load VGG model
     base_model = VGG16(weights='imagenet')
@@ -93,8 +95,9 @@ if __name__ == '__main__':
     stdSlr = StandardScaler().fit(fisher)
     D_scaled = stdSlr.transform(fisher)
     print 'Training the SVM classifier...'
-    clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True).fit(D_scaled, train_labels)
-    io.save_object(clf, 'clf_NN_pca256')
+    #clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True).fit(D_scaled, train_labels)
+    clf = io.load_object('clf_NN_pca256')
+    #io.save_object(clf, 'clf_NN_pca256')
     #clf = io.load_object('clf_NN',ignore=False)
 
     # get all the test data and predict their labels
@@ -117,5 +120,35 @@ if __name__ == '__main__':
         fisher_test[i, :] = preprocessing.normalize(fisher_test[i, :].reshape(1,-1), norm='l2')
 
     accuracy = 100 * clf.score(stdSlr.transform(fisher_test), test_labels)
-
+    fisher_test = stdSlr.transform(fisher_test)
     print 'Final accuracy: ' + str(accuracy)
+    classes = clf.classes_
+    predicted_prob = clf.predict_proba(fisher_test)
+    print (np.transpose(predicted_prob.shape))
+    pred_prob = np.ravel(predicted_prob)
+    print (pred_prob.shape)
+    pred_class = clf.classes_[np.argmax(np.transpose(predicted_prob))]
+    print(pred_class.shape)
+
+    # Create confusion matrix
+    conf = confusion_matrix(test_labels, pred_class, labels=classes)
+
+    # Create ROC curve and AUC score
+    test_labels_bin = label_binarize(test_labels, classes=classes)
+    fpr = []
+    tpr = []
+    roc_auc = []
+    for i in range(len(classes)):
+        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(pred_prob)[:, i])
+        c_roc_auc = auc(c_fpr, c_tpr)
+        fpr.append(c_fpr)
+        tpr.append(c_tpr)
+        roc_auc.append(c_roc_auc)
+
+    # Plot
+    plotting.plot_confusion_matrix(conf, classes=classes, normalize=True)
+    plotting.plot_roc_curve(fpr, tpr, roc_auc, classes=classes,
+                            title='ROC curve for linear SVM with codebook of {} words'.format(k)
+                            )
+
+    print('Done.')
