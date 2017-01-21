@@ -120,7 +120,6 @@ if __name__ == '__main__':
         fisher_test[i, :] = preprocessing.normalize(fisher_test[i, :].reshape(1,-1), norm='l2')
 
     accuracy = 100 * clf.score(stdSlr.transform(fisher_test), test_labels)
-    fisher_test = stdSlr.transform(fisher_test)
     print 'Final accuracy: ' + str(accuracy)
     classes = clf.classes_
     predicted_prob = clf.predict_proba(fisher_test)
