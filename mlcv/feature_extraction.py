@@ -295,13 +295,11 @@ def compute_CNN_features(ind, filename, label, model):
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = preprocess_input(x)
-
     features = model.predict(x)
-    features = np.reshape(features, (features.shape[1], features.shape[2], features.shape[3]))
-    features = features.reshape(14, 14, 16, 32).swapaxes(1, 2).reshape(14 * 14, 512)
-    features = features.transpose()
+    features = features[0, :, :, :]
+    descriptor = features.reshape(features.shape[0] * features.shape[1], features.shape[2])
 
-    return features, label, ind
+    return descriptor, label, ind
 
 
 def parallel_CNN_features(list_images_filenames, list_images_labels, model, num_samples_class=-1, n_jobs=settings.n_jobs):

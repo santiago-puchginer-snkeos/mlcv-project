@@ -77,7 +77,7 @@ if __name__ == '__main__':
     pca, D_pca = feature_extraction.pca(D)
 
     k = settings.codebook_size
-    gmm = bovw.create_gmm(D_pca, 'gmm_{}_CNNfeature'.format(k))
+    gmm = bovw.create_gmm(D_pca, 'gmm_{}_pca_{}_CNNfeature'.format(k, settings.pca_reduction))
     fisher, labels = bovw.fisher_vectors(D_pca, L, I, gmm, normalization='l2', spatial_pyramid=False)
     # std_scaler = StandardScaler().fit(fisher)
     # vis_words = std_scaler.transform(fisher)

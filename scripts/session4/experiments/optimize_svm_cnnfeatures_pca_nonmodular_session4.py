@@ -5,100 +5,117 @@ from keras.models import Model
 from keras import backend as K
 from keras.utils.visualize_util import plot
 
-import argparse
-import itertools
-import time
-import os
-import mlcv.feature_extraction as feature_extraction
-import mlcv.kernels as kernels
-import mlcv.settings as settings
-import mlcv.bovw as bovw
-import mlcv.input_output as io
-import mlcv.classification as classification
 import numpy as np
 import matplotlib.pyplot as plt
+import cPickle
+import os
+import time
+import argparse
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-import joblib
-import time
+import itertools
+
+import mlcv.input_output  as io
+import mlcv.kernels as kernels
+from libraries.yael.yael import ynumpy
+from sklearn import svm
+from sklearn.preprocessing import StandardScaler
+import sklearn.decomposition as decomposition
+import sklearn.preprocessing as preprocessing
 
 """ PARAMETER SWEEP """
 
 codebook_size = [16, 32, 64]
-pca_reduction = [0.20, 0.50, 0.80]
+pca_reduction = [0.5, 0.4, 0.3, 0.2, 0.1]
 params_distribution = {
     'C': np.logspace(-5, 3, 10 ** 6)
 }
 n_iter = 50
+
 
 def train():
     best_accuracy = 0
     best_params = {}
     cv_results = {}
 
-    """ SETTINGS """
-    settings.n_jobs = 1
+    base_model = VGG16(weights='imagenet')
+
+    # crop the model up to a certain layer
+    model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
 
     # Read the training set
-    train_images_filenames, train_labels = io.load_training_set()
-    io.log('Loaded {} train images.'.format(len(train_images_filenames)))
-    k = 64
+    train_images_filenames = cPickle.load(open('./dataset/train_images_filenames.dat', 'r'))
+    test_images_filenames = cPickle.load(open('./dataset/test_images_filenames.dat', 'r'))
+    train_labels = cPickle.load(open('./dataset/train_labels.dat', 'r'))
+    test_labels = cPickle.load(open('./dataset/test_labels.dat', 'r'))
+    io.log('\nLoaded {} train images.'.format(len(train_images_filenames)))
+    io.log('\nLoaded {} test images.'.format(len(test_images_filenames)))
 
-
-    io.log('Obtaining dense CNN features...')
+    # read and process training images
+    print 'Getting features from training images'
     start_feature = time.time()
-    try:
-        D, L, I = io.load_object('train_CNN_descriptors', ignore=True), \
-                  io.load_object('train_CNN_labels', ignore=True), \
-                  io.load_object('train_CNN_indices', ignore=True)
-    except IOError:
-        # load VGG model
-        base_model = VGG16(weights='imagenet')
-        # io.save_object(base_model, 'base_model', ignore=True)
+    Train_descriptors = []
+    Train_label_per_descriptor = []
 
-        # visualize topology in an image
-        plot(base_model, to_file='modelVGG16.png', show_shapes=True, show_layer_names=True)
+    for i in range(len(train_images_filenames)):
+        img = image.load_img(train_images_filenames[i], target_size=(224, 224))
+        x = image.img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
 
-        # crop the model up to a certain layer
-        model = Model(input=base_model.input, output=base_model.get_layer('block5_conv2').output)
-        D, L, I = feature_extraction.parallel_CNN_features(train_images_filenames, train_labels, model,
-                                                              num_samples_class=-1,
-                                                              n_jobs=settings.n_jobs)
-        io.save_object(D, 'train_CNN_descriptors', ignore=True)
-        io.save_object(L, 'train_CNN_labels', ignore=True)
-        io.save_object(I, 'train_CNN_indices', ignore=True)
+        # get the features from images
+        features = model.predict(x)
+        features = features[0, :, :, :]
+        descriptor = features.reshape(features.shape[0] * features.shape[1], features.shape[2])
+
+        Train_descriptors.append(descriptor)
+        Train_label_per_descriptor.append(train_labels[i])
+
+    # Put all descriptors in a numpy array to compute PCA and GMM
+    size_descriptors = Train_descriptors[0].shape[1]
+    Desc = np.zeros((np.sum([len(p) for p in Train_descriptors]), size_descriptors), dtype=np.uint8)
+    startingpoint = 0
+    for i in range(len(Train_descriptors)):
+        Desc[startingpoint:startingpoint + len(Train_descriptors[i])] = Train_descriptors[i]
+        startingpoint += len(Train_descriptors[i])
     feature_time = time.time() - start_feature
     io.log('Elapsed time: {:.2f} s'.format(feature_time))
-
 
     for dim_red in pca_reduction:
         io.log('Applying PCA ... ' )
         start_pca = time.time()
-        settings.pca_reduction = D.shape[1]*dim_red
-        pca, D_pca = feature_extraction.pca(D)
+        reduction = np.int(dim_red*Desc.shape[1])
+        pca = decomposition.PCA(n_components=reduction)
+        pca.fit(Desc)
+        Desc = np.float32(pca.transform(Desc))
         pca_time = time.time() - start_pca
         io.log('Elapsed time: {:.2f} s'.format(pca_time))
         for k in codebook_size:
             io.log('Creating GMM model (k = {})'.format(k))
             start_gmm = time.time()
-            settings.codebook_size = k
-            gmm = bovw.create_gmm(D_pca, 'gmm_{}_pca_{}_CNNfeature'.format(
-                k,settings.pca_reduction
-            ))
+            gmm = ynumpy.gmm_learn(np.float32(Desc), k)
+            io.save_object(gmm, 'gmm_NN_pca_{}_k_{}'.format(reduction, k))
             gmm_time = time.time() - start_gmm
             io.log('Elapsed time: {:.2f} s'.format(gmm_time))
 
             io.log('Getting Fisher vectors from training set...')
             start_fisher = time.time()
-            fisher, labels = bovw.fisher_vectors(D_pca, L, I, gmm, normalization='l2')
+            fisher = np.zeros((len(Train_descriptors), k * reduction * 2), dtype=np.float32)
+            for i in xrange(len(Train_descriptors)):
+                descriptor = Train_descriptors[i]
+                descriptor = np.float32(pca.transform(descriptor))
+                fisher[i, :] = ynumpy.fisher(gmm, descriptor, include=['mu', 'sigma'])
+                # L2 normalization - reshape to avoid deprecation warning, checked that the result is the same
+                fisher[i, :] = preprocessing.normalize(fisher[i, :].reshape(1, -1), norm='l2')
+
             fisher_time = time.time() - start_fisher
             io.log('Elapsed time: {:.2f} s'.format(fisher_time))
 
             io.log('Scaling features...')
             start_scaler = time.time()
-            std_scaler = StandardScaler().fit(fisher)
-            vis_words = std_scaler.transform(fisher)
+            stdSlr = StandardScaler().fit(fisher)
+            D_scaled = stdSlr.transform(fisher)
             scaler_time = time.time() - start_scaler
             io.log('Elapsed time: {:.2f} s'.format(scaler_time))
 
@@ -110,14 +127,13 @@ def train():
                 params_distribution,
                 n_iter=n_iter,
                 scoring='accuracy',
-                n_jobs=settings.n_jobs,
                 refit=False,
                 cv=3,
                 verbose=1
             )
             # Precompute Gram matrix
-            gram = kernels.intersection_kernel(vis_words, vis_words)
-            random_search.fit(gram, labels)
+            gram = kernels.intersection_kernel(D_scaled, D_scaled)
+            random_search.fit(gram, train_labels)
             crossvalidation_time = time.time() - start_crossvalidation
             io.log('Elapsed time: {:.2f} s'.format(crossvalidation_time))
 
@@ -237,7 +253,7 @@ def plot_curve():
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 
