@@ -88,13 +88,13 @@ def train():
         reduction = np.int(dim_red*Desc.shape[1])
         pca = decomposition.PCA(n_components=reduction)
         pca.fit(Desc)
-        Desc = np.float32(pca.transform(Desc))
+        Desc_pca = np.float32(pca.transform(Desc))
         pca_time = time.time() - start_pca
         io.log('Elapsed time: {:.2f} s'.format(pca_time))
         for k in codebook_size:
             io.log('Creating GMM model (k = {})'.format(k))
             start_gmm = time.time()
-            gmm = ynumpy.gmm_learn(np.float32(Desc), k)
+            gmm = ynumpy.gmm_learn(np.float32(Desc_pca), k)
             io.save_object(gmm, 'gmm_NN_pca_{}_k_{}'.format(reduction, k))
             gmm_time = time.time() - start_gmm
             io.log('Elapsed time: {:.2f} s'.format(gmm_time))
