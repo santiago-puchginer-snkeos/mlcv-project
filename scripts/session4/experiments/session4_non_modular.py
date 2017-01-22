@@ -27,6 +27,7 @@ if __name__ == '__main__':
     C=0.0428307453111
     pca_reduction = 52
 
+
     # load VGG model
     base_model = VGG16(weights='imagenet')
 
@@ -95,8 +96,8 @@ if __name__ == '__main__':
     stdSlr = StandardScaler().fit(fisher)
     D_scaled = stdSlr.transform(fisher)
     print 'Training the SVM classifier...'
-    #clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True).fit(D_scaled, train_labels)
-    clf = io.load_object('clf_NN_pca256')
+    clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True).fit(D_scaled, train_labels)
+    #clf = io.load_object('clf_NN_pca256')
     #io.save_object(clf, 'clf_NN_pca256')
     #clf = io.load_object('clf_NN',ignore=False)
 
@@ -119,17 +120,15 @@ if __name__ == '__main__':
         # L2 normalization
         fisher_test[i, :] = preprocessing.normalize(fisher_test[i, :].reshape(1,-1), norm='l2')
 
+    probs = clf.predict_proba(stdSlr.transform(fisher_test))
+    predicted_class = clf.classes_[np.argmax(probs, axis=1)]
+    classes = clf.classes_
+
     accuracy = 100 * clf.score(stdSlr.transform(fisher_test), test_labels)
     print 'Final accuracy: ' + str(accuracy)
-    classes = clf.classes_
-    predicted_prob = clf.predict_proba(fisher_test)
-    pred_prob = np.ravel(predicted_prob)
-    print (pred_prob.shape)
-    pred_class = clf.classes_[np.argmax((predicted_prob))]
-    print(pred_class.shape)
 
     # Create confusion matrix
-    conf = confusion_matrix(test_labels, pred_class, labels=classes)
+    conf = confusion_matrix(test_labels, predicted_class, labels=classes)
 
     # Create ROC curve and AUC score
     test_labels_bin = label_binarize(test_labels, classes=classes)
@@ -137,7 +136,7 @@ if __name__ == '__main__':
     tpr = []
     roc_auc = []
     for i in range(len(classes)):
-        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(pred_prob)[:, i])
+        c_fpr, c_tpr, _ = roc_curve(test_labels_bin[:, i], np.array(probs)[:, i])
         c_roc_auc = auc(c_fpr, c_tpr)
         fpr.append(c_fpr)
         tpr.append(c_tpr)
@@ -148,5 +147,11 @@ if __name__ == '__main__':
     plotting.plot_roc_curve(fpr, tpr, roc_auc, classes=classes,
                             title='ROC curve for linear SVM with codebook of {} words'.format(k)
                             )
+
+    io.save_object(conf, 'conf')
+    io.save_object(classes, 'classes')
+    io.save_object(fpr, 'fpr')
+    io.save_object(tpr, 'tpr')
+    io.save_object(roc_auc, 'roc_auc')
 
     print('Done.')

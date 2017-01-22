@@ -57,7 +57,7 @@ def plot_svm_param(filename, mode='2d', name='default'):
 
 
 def plot_confusion_matrix(conf_matrix, classes, normalize=False):
-    plt.figure(facecolor='white', dpi=200)
+    plt.figure(facecolor='white')
     plt.imshow(conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title('Confusion matrix')
     plt.colorbar()
@@ -86,7 +86,7 @@ def plot_roc_curve(false_pos_rate, true_pos_rate, auc_scores, classes, title='')
     lw = 2
 
     # Plotting
-    plt.figure(facecolor='white', dpi=200)
+    plt.figure(facecolor='white')
     for i, color in zip(range(len(classes)), colors):
         label = '{} (AUC: {:.3f})'.format(classes[i], auc_scores[i])
         plt.plot(false_pos_rate[i], true_pos_rate[i], color=color, lw=lw, label=label)

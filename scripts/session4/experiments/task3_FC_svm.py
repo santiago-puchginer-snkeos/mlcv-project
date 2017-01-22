@@ -21,9 +21,7 @@ import sklearn.preprocessing as preprocessing
 """ MAIN SCRIPT"""
 if __name__ == '__main__':
 
-    k = 32
-    C=1
-    pca_reduction = 256
+    C=0.000801150123022
 
     # load VGG model
     base_model = VGG16(weights='imagenet')
@@ -58,17 +56,12 @@ if __name__ == '__main__':
 
     io.save_object(Desc, 'train_descriptors')
 
-    print('Computing PCA')
-    #pca = decomposition.PCA(n_components=pca_reduction)
-    #pca.fit(Desc)
-    #Desc = np.float32(pca.transform(Desc))
-
     # Train a linear SVM classifier
     stdSlr = StandardScaler().fit(Desc)
     D_scaled = stdSlr.transform(Desc)
     print 'Training the SVM classifier...'
     clf = svm.SVC(kernel=kernels.intersection_kernel, C=C, probability=True).fit(D_scaled, train_labels)
-    io.save_object(clf, 'clf_T3_pca256')
+    io.save_object(clf, 'clf_T3')
     #clf = io.load_object('clf_T3_pca256',ignore=False)
 
     # get all the test data and predict their labels
