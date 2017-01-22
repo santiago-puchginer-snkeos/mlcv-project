@@ -173,7 +173,7 @@ def plot_curve():
     color = colors.next()
     ax = plt.subplot(1, 1, 1)
     ax.set_xscale("log")
-    ax.set_ylim((0.7, 0.9))
+    ax.set_ylim((0, 1))
     ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
     ax.set_xlabel('C')
     ax.set_ylabel('Accuracy')
