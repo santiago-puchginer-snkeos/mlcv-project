@@ -1,28 +1,29 @@
-from keras.applications.vgg16 import VGG16
-from keras.preprocessing import image
-from keras.applications.vgg19 import preprocess_input
-from keras.models import Model
-from keras import backend as K
-from keras.utils.visualize_util import plot
-from keras.layers import  Input
-from keras.layers import  MaxPooling2D
-from keras.applications.imagenet_utils import  preprocess_input, _obtain_input_shape
+# from keras.applications.vgg16 import VGG16
+# from keras.preprocessing import image
+# from keras.applications.vgg19 import preprocess_input
+# from keras.models import Model
+# from keras import backend as K
+# from keras.utils.visualize_util import plot
+# from keras.layers import  Input
+# from keras.layers import  MaxPooling2D
+# from keras.applications.imagenet_utils import  preprocess_input, _obtain_input_shape
 import argparse
 
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import cPickle
 import os
+import itertools
 
 import mlcv.input_output  as io
 import mlcv.kernels as kernels
-from libraries.yael.yael import ynumpy
-from sklearn import svm
-from sklearn.preprocessing import StandardScaler
-import sklearn.decomposition as decomposition
-import sklearn.preprocessing as preprocessing
-
-from sklearn.model_selection import RandomizedSearchCV
+# from libraries.yael.yael import ynumpy
+# from sklearn import svm
+# from sklearn.preprocessing import StandardScaler
+# import sklearn.decomposition as decomposition
+# import sklearn.preprocessing as preprocessing
+#
+# from sklearn.model_selection import RandomizedSearchCV
 from sklearn.svm import SVC
 
 """ PARAMETER SWEEP """
@@ -72,10 +73,17 @@ def train():
         features = features_[0, :, :, :]
         descriptor = features.reshape(features.shape[0]*features.shape[1], features.shape[2])
         # aggregate features
+        # max value (can be different filters)
         #descriptor_agg=descriptor.max(axis=1)
-        #descriptor_agg=np.reshape(descriptor_agg,[descriptor_agg.shape[0],1])
+        # sum value (of all layers)
+        #descriptor_agg=np.sum(descriptor,axis=1)
+        # max value of just one filter
+        energy=descriptor.max(axis=0)
+        descriptor_agg=descriptor[:, np.argmax(energy)]
 
-        Train_descriptors.append(descriptor)
+        descriptor_agg=np.reshape(descriptor_agg,[descriptor_agg.shape[0],1])
+
+        Train_descriptors.append(descriptor_agg)
         Train_label_per_descriptor.append(train_labels[i])
 
     # Put all descriptors in a numpy array to compute PCA and GMM
@@ -97,13 +105,14 @@ def train():
 
         # Compute the fisher vectors of the training images
         print('Computing fisher vectors')
-        fisher = np.zeros((len(Train_descriptors), k * 512 * 2), dtype=np.float32)
+        fisher = np.zeros((len(Train_descriptors), k * 1 * 2), dtype=np.float32)
+
         for i in xrange(len(Train_descriptors)):
             descriptor = Train_descriptors[i]
            # descriptor = np.float32(pca.transform(descriptor))
             aux=ynumpy.fisher(gmm, descriptor, include=['mu', 'sigma'])
-            #fisher[i, :] = np.reshape(aux, [1, aux.shape[0]])
-            fisher[i,:]=aux
+            fisher[i, :] = np.reshape(aux, [1, aux.shape[0]])
+            #fisher[i,:]=aux
             # L2 normalization - reshape to avoid deprecation warning, checked that the result is the same
             fisher[i, :] = preprocessing.normalize(fisher[i, :].reshape(1,-1), norm='l2')
 
@@ -139,7 +148,7 @@ def train():
                 'cv_results': results,
                 }
         })
-        io.save_object(cv_results, 'intersection_svm_CNNfeatures_aggregate', ignore=True)
+        io.save_object(cv_results, 'intersection_svm_CNNfeatures_aggregate_energy', ignore=True)
 
         # Obtaining the parameters which yielded the best accuracy
         if random_search.best_score_ > best_accuracy:
@@ -149,13 +158,13 @@ def train():
 
         io.log('-------------------------------\n')
     io.log('\nSaving best parameters...')
-    io.save_object(best_params, 'best_params_intersection_svm_CNNfeatures', ignore=True)
-    best_params_file = os.path.abspath('./ignore/best_params_intersection_svm_CNNfeatures_aggregate.pickle')
+    io.save_object(best_params, 'best_params_intersection_svm_CNNfeatures_aggregate_energy', ignore=True)
+    best_params_file = os.path.abspath('./ignore/best_params_intersection_svm_CNNfeatures_aggregate_energy.pickle')
     io.log('Saved at {}'.format(best_params_file))
 
     io.log('\nSaving all cross-validation values...')
-    io.save_object(cv_results, 'intersection_svm_CNNfeatures', ignore=True)
-    cv_results_file = os.path.abspath('./ignore/intersection_svm_CNNfeatures_aggregate.pickle')
+    io.save_object(cv_results, 'intersection_svm_CNNfeatures_aggregate_energy', ignore=True)
+    cv_results_file = os.path.abspath('./ignore/intersection_svm_CNNfeatures_aggregate_energy.pickle')
     io.log('Saved at {}'.format(cv_results_file))
 
     io.log('\nBEST PARAMS')
@@ -165,11 +174,63 @@ def train():
         best_accuracy
     ))
 def plot_curve():
-    train()
+
+    io.log('Loading cross-validation values...')
+    cv_values = io.load_object('intersection_svm_CNNfeatures_aggregate_max', ignore=True)
+
+    io.log('Loading best parameters...')
+    best_params = io.load_object('best_params_intersection_svm_CNNfeatures_aggregate_max', ignore=True)
+
+    io.log('Plotting...')
+    colors = itertools.cycle(
+        ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'darkolivegreen', 'darkviolet', 'black']
+    )
+
+    # Subplot parameters
+    plt.figure(facecolor='white')
+    num_subplots = len(codebook_size)
+    num_columns = 1
+    num_rows = np.ceil(num_subplots / num_columns)
+
+    # All subplots
+    for ind, k in enumerate(codebook_size):
+        # Search dictionary
+        val = cv_values[(k)]
+        results = val['cv_results']
+
+
+        # Plot
+        x = results['param_C']
+        y = results['mean_test_score']
+        e = results['std_test_score']
+        sorted_indices = x.argsort()
+        x_sorted = np.asarray(x[sorted_indices], dtype=np.float64)
+        y_sorted = np.asarray(y[sorted_indices], dtype=np.float64)
+        e_sorted = np.asarray(e[sorted_indices], dtype=np.float64)
+        color = colors.next()
+        ax = plt.subplot(num_rows, num_columns, ind + 1)
+        ax.set_xscale("log")
+        ax.set_ylim((0, 1))
+        ax.errorbar(x_sorted, y_sorted, e_sorted, linestyle='--', lw=2, marker='x', color=color)
+        ax.set_title('{} Gaussians in GMM'.format(k))
+        ax.set_xlabel('C')
+        ax.set_ylabel('Accuracy')
+
+        # Print information
+        io.log('CODEBOOK {} '.format(k))
+        io.log('-------------')
+        io.log('Mean accuracy: {}'.format(y.max()))
+        io.log('Std accuracy: {}'.format(e[np.argmax(y)]))
+        io.log('C: {}'.format(x[np.argmax(y)]))
+        io.log()
+
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('--type', default='train', choices=['train', 'plot'])
+    args_parser.add_argument('--type', default='plot', choices=['train', 'plot'])
     args = args_parser.parse_args()
     exec_option = args.type
 
