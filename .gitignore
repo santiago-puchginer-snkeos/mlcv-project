@@ -6,7 +6,8 @@
 .idea/
 
 # Dataset (images)
-dataset/MIT_split/
+dataset/*
+!dataset/*.dat
 
 # Models
 *.pickle
