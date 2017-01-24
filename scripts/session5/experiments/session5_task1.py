@@ -3,20 +3,23 @@ from __future__ import print_function, division
 import matplotlib.pyplot as plt
 from keras import backend as K
 from keras.applications.vgg16 import VGG16
-from keras.layers import Dense
+from keras.layers import Dense, Flatten, MaxPooling2D, Convolution2D
+from keras.layers import Dense, Dropout
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.visualize_util import plot
+from keras.optimizers import Adadelta, SGD
+from keras.regularizers import l2, activity_l2
 import time
 
 """ CONSTANTS """
-train_data_dir = './dataset/400_dataset/'
+train_data_dir = './dataset/MIT_split/train/'
 val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
-batch_size = 40
-number_of_epoch = 20
+batch_size = 20
+number_of_epoch = 100
 
 
 def preprocess_input(x, dim_ordering='default'):
@@ -44,20 +47,27 @@ def preprocess_input(x, dim_ordering='default'):
 # create the base pre-trained model
 base_model = VGG16(weights='imagenet')
 plot(base_model, to_file='./results/modelVGG16a.png', show_shapes=True, show_layer_names=True)
+# Get output from last convolutional layer in block 4
 
-x = base_model.get_layer('fc2').output
-x = base_model.layers[-2].output
-# x = base_model.get_layer('block5_pool').output
-# x = Flatten(name='flat')(x)
-# x = Dense(4096, activation='relu', name='fc')(x)
+x = base_model.get_layer('block4_conv3').output
+x = MaxPooling2D(pool_size=(2, 2))(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = MaxPooling2D(pool_size=(2, 2))(x)
+x = Flatten(name='flat')(x)
+x = Dense(4096, activation='relu', name='fc')(x)
+x = Dense(4096, activation='relu', name='fc2')(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 model = Model(input=base_model.input, output=x)
-plot(model, to_file='./results/modelVGG16b.png', show_shapes=True, show_layer_names=True)
+plot(model, to_file='./results/modelVGG16_task1.png', show_shapes=True, show_layer_names=True)
 for layer in base_model.layers:
     layer.trainable = False
 
-model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+
+optimizer=SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=False)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 for layer in model.layers:
     print(layer.name, layer.trainable)
 
@@ -74,7 +84,7 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              channel_shift_range=0.,
                              fill_mode='nearest',
                              cval=0.,
-                             horizontal_flip=False,
+                             horizontal_flip=True,
                              vertical_flip=False,
                              rescale=None,
                              preprocessing_function=preprocess_input)

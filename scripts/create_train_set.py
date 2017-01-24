@@ -8,9 +8,9 @@ import shutil
 if __name__ == '__main__':
 
     """ CONSTANTS """
-    INPUT_DIR = '../dataset/MIT_split/train'
-    NUM_SAMPLES = 40
-    OUTPUT_DIR = '../dataset/{}_dataset'.format(NUM_SAMPLES)
+    INPUT_DIR = 'dataset/MIT_split/train'
+    NUM_SAMPLES = 400
+    OUTPUT_DIR = 'dataset/{}_dataset'.format(NUM_SAMPLES)
 
     """ COMPUTE PRIORS """
     labels = os.listdir(INPUT_DIR)

@@ -14,16 +14,16 @@ from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
-val_data_dir = './dataset/MIT_split/test'
+val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
 batch_size = 32
-samples_epoch = 400
-val_samples_epoch = 400
+samples_epoch = 800
+val_samples_epoch = 800
 test_samples = 800
-number_of_epoch_fc = 20
-number_of_epoch_full = 10
+number_of_epoch_fc = 100
+number_of_epoch_full = 100
 
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet')
@@ -31,11 +31,13 @@ base_model = VGG16(weights='imagenet')
 # Get output from last convolutional layer in block 4
 x = base_model.get_layer('block4_conv3').output
 x = MaxPooling2D(pool_size=(2, 2))(x)
-x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
-x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 x = Flatten(name='flat')(x)
 x = Dense(4096, activation='relu', name='fc')(x)
+x = Dense(4096, activation='relu', name='fc2')(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 # Create new model and save it
@@ -48,9 +50,24 @@ for layer in base_model.layers:
 
 # Compile the new model
 optimizer = Adadelta(lr=0.1)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-datagen = ImageDataGenerator(preprocessing_function=preprocess_input)
+datagen = ImageDataGenerator(featurewise_center=False,
+                             samplewise_center=False,
+                             featurewise_std_normalization=False,
+                             samplewise_std_normalization=False,
+                             rotation_range=0.,
+                             width_shift_range=0.,
+                             height_shift_range=0.,
+                             shear_range=0.,
+                             zoom_range=0.,
+                             channel_shift_range=0.,
+                             fill_mode='nearest',
+                             cval=0.,
+                             horizontal_flip=False,
+                             vertical_flip=False,
+                             rescale=None,
+                             preprocessing_function=preprocess_input)
 
 train_generator = datagen.flow_from_directory(train_data_dir,
                                               shuffle=True,
@@ -74,6 +91,7 @@ print('\n--------------------------------')
 print('FULLY CONNECTED LAYERS TRAINING')
 print('--------------------------------\n')
 start_time = time.time()
+
 history_fc = model.fit_generator(train_generator,
                                  samples_per_epoch=samples_epoch,
                                  nb_epoch=number_of_epoch_fc,
