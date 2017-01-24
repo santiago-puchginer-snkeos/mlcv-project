@@ -3,13 +3,14 @@ from __future__ import print_function, division
 import time
 
 import matplotlib.pyplot as plt
-from keras import backend as K
 from keras.applications.vgg16 import VGG16
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.layers import Dense, MaxPooling2D, Flatten
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.visualize_util import plot
+
+from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
@@ -23,29 +24,6 @@ val_samples_epoch = 400
 test_samples = 800
 number_of_epoch_fc = 20
 number_of_epoch_full = 10
-
-
-def preprocess_input(x, dim_ordering='default'):
-    if dim_ordering == 'default':
-        dim_ordering = K.image_dim_ordering()
-    assert dim_ordering in {'tf', 'th'}
-
-    if dim_ordering == 'th':
-        # 'RGB'->'BGR'
-        x = x[::-1, :, :]
-        # Zero-center by mean pixel
-        x[0, :, :] -= 103.939
-        x[1, :, :] -= 116.779
-        x[2, :, :] -= 123.68
-    else:
-        # 'RGB'->'BGR'
-        x = x[:, :, ::-1]
-        # Zero-center by mean pixel
-        x[:, :, 0] -= 103.939
-        x[:, :, 1] -= 116.779
-        x[:, :, 2] -= 123.68
-    return x
-
 
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet')

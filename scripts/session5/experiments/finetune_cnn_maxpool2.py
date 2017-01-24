@@ -3,13 +3,14 @@ from __future__ import print_function, division
 import time
 
 import matplotlib.pyplot as plt
-from keras import backend as K
 from keras.applications.vgg16 import VGG16
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten, MaxPooling2D, Convolution2D
 from keras.optimizers import Adadelta
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.visualize_util import plot
+
+from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
@@ -24,41 +25,22 @@ test_samples = 800
 number_of_epoch_fc = 20
 number_of_epoch_full = 10
 
-
-def preprocess_input(x, dim_ordering='default'):
-    if dim_ordering == 'default':
-        dim_ordering = K.image_dim_ordering()
-    assert dim_ordering in {'tf', 'th'}
-
-    if dim_ordering == 'th':
-        # 'RGB'->'BGR'
-        x = x[::-1, :, :]
-        # Zero-center by mean pixel
-        x[0, :, :] -= 103.939
-        x[1, :, :] -= 116.779
-        x[2, :, :] -= 123.68
-    else:
-        # 'RGB'->'BGR'
-        x = x[:, :, ::-1]
-        # Zero-center by mean pixel
-        x[:, :, 0] -= 103.939
-        x[:, :, 1] -= 116.779
-        x[:, :, 2] -= 123.68
-    return x
-
-
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet')
 
 # Get output from last convolutional layer in block 4
-x = base_model.get_layer('block4_pool').output
+x = base_model.get_layer('block4_conv3').output
+x = MaxPooling2D(pool_size=(2, 2))(x)
+x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
+x = MaxPooling2D(pool_size=(2, 2))(x)
 x = Flatten(name='flat')(x)
-x = Dense(2048, activation='relu', name='fc')(x)
+x = Dense(4096, activation='relu', name='fc')(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 # Create new model and save it
 model = Model(input=base_model.input, output=x)
-plot(model, to_file='./results/finetune_cnn_maxpool4.png', show_shapes=True, show_layer_names=True)
+plot(model, to_file='./results/finetune_cnn_maxpool2.png', show_shapes=True, show_layer_names=True)
 
 # Freeze layers from VGG model
 for layer in base_model.layers:
@@ -130,7 +112,7 @@ plt.title('Model accuracy (only FC layers training)')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/finetune_maxpool4_accuracy_fc.jpg')
+plt.savefig('./results/finetune_maxpool2_accuracy_fc.jpg')
 plt.close()
 
 plt.plot(history_full.history['acc'])
@@ -139,7 +121,7 @@ plt.title('Model accuracy (whole network training)')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/finetune_maxpool4_accuracy_full.jpg')
+plt.savefig('./results/finetune_maxpool2_accuracy_full.jpg')
 plt.close()
 
 plt.plot(history_fc.history['loss'])
@@ -148,7 +130,7 @@ plt.title('Model loss (only FC layers training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/finetune_maxpool4_loss_fc.jpg')
+plt.savefig('./results/finetune_maxpool2_loss_fc.jpg')
 
 plt.plot(history_full.history['loss'])
 plt.plot(history_full.history['val_loss'])
@@ -156,4 +138,4 @@ plt.title('Model loss (whole network training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/finetune_maxpool4_loss_full.jpg')
+plt.savefig('./results/finetune_maxpool2_loss_full.jpg')
