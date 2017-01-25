@@ -1,16 +1,16 @@
 from __future__ import print_function, division
 
+import time
+
 import matplotlib.pyplot as plt
 from keras import backend as K
 from keras.applications.vgg16 import VGG16
-from keras.layers import Dense, Flatten, MaxPooling2D, Convolution2D
-from keras.layers import Dense, Dropout
+from keras.layers import Dense
+from keras.layers import Flatten, MaxPooling2D
 from keras.models import Model
+from keras.optimizers import SGD
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.visualize_util import plot
-from keras.optimizers import Adadelta, SGD
-from keras.regularizers import l2, activity_l2
-import time
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset'
@@ -50,10 +50,6 @@ plot(base_model, to_file='./results/modelVGG16a.png', show_shapes=True, show_lay
 # Get output from last convolutional layer in block 4
 
 x = base_model.get_layer('block4_conv3').output
-#x = MaxPooling2D(pool_size=(4, 4))(x)
-#x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
-#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
-#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 x = Flatten(name='flat')(x)
 x = Dense(4096, activation='relu', name='fc')(x)
@@ -76,7 +72,7 @@ datagen = ImageDataGenerator(featurewise_center=True,
                              samplewise_center=True,
                              featurewise_std_normalization=False,
                              samplewise_std_normalization=False,
-                             zca_whitening=True,
+                             zca_whitening=False,
                              rotation_range=10,
                              width_shift_range=0.,
                              height_shift_range=0.,
