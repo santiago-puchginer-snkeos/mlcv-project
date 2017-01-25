@@ -13,13 +13,13 @@ from keras.regularizers import l2, activity_l2
 import time
 
 """ CONSTANTS """
-train_data_dir = './dataset/MIT_split/train/'
+train_data_dir = './dataset/400_dataset'
 val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
 batch_size = 20
-number_of_epoch = 100
+number_of_epoch = 50
 
 
 def preprocess_input(x, dim_ordering='default'):
@@ -50,10 +50,10 @@ plot(base_model, to_file='./results/modelVGG16a.png', show_shapes=True, show_lay
 # Get output from last convolutional layer in block 4
 
 x = base_model.get_layer('block4_conv3').output
-x = MaxPooling2D(pool_size=(2, 2))(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+#x = MaxPooling2D(pool_size=(4, 4))(x)
+#x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
+#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 x = Flatten(name='flat')(x)
 x = Dense(4096, activation='relu', name='fc')(x)
@@ -66,17 +66,18 @@ for layer in base_model.layers:
     layer.trainable = False
 
 
-optimizer=SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=False)
+optimizer=SGD(lr=1e-5, momentum=0.9, decay=0.0, nesterov=False)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 for layer in model.layers:
     print(layer.name, layer.trainable)
 
 # preprocessing_function=preprocess_input,
-datagen = ImageDataGenerator(featurewise_center=False,
-                             samplewise_center=False,
+datagen = ImageDataGenerator(featurewise_center=True,
+                             samplewise_center=True,
                              featurewise_std_normalization=False,
                              samplewise_std_normalization=False,
-                             rotation_range=0.,
+                             zca_whitening=True,
+                             rotation_range=10,
                              width_shift_range=0.,
                              height_shift_range=0.,
                              shear_range=0.,
@@ -107,14 +108,14 @@ validation_generator = datagen.flow_from_directory(val_data_dir,
 
 start_time = time.time()
 history = model.fit_generator(train_generator,
-                              samples_per_epoch=400,
+                              samples_per_epoch=2000,
                               nb_epoch=number_of_epoch,
                               validation_data=validation_generator,
                               nb_val_samples=807)
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
 print ('\nSaving weights into file...')
-#model.save_weights('./results/weights_1000to8classes')
+model.save_weights('./results/weights_DA_pool_flaten_2fc_predict')
 print('\nEvaluating performance on test set...')
 result = model.evaluate_generator(test_generator, val_samples=807)
 print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1]*100))

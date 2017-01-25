@@ -15,13 +15,13 @@ from keras.callbacks import EarlyStopping, LearningRateScheduler, ModelCheckpoin
 from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
-train_data_dir = './dataset/400_dataset'
-val_data_dir = './dataset/MIT_split/test'
+train_data_dir = './dataset/MIT_split/train'
+val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
 batch_size = 32
-samples_epoch = 1200
+samples_epoch = 400
 val_samples_epoch = 400
 test_samples = 800
 number_of_epoch_fc = 100
@@ -30,18 +30,23 @@ lr = 1e-7
 
 
 def learning_rate_scheduler(epoch):
-    return lr / (math.ceil(epoch / 5) + 1)
-
+    #return lr / (math.ceil(epoch / 5) + 1)
+    return lr
 
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet')
 
 # Get output from last convolutional layer in block 4
 x = base_model.get_layer('block4_conv3').output
+#x = MaxPooling2D(pool_size=(4, 4))(x)
+#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
+#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
+#x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
+# x = MaxPooling2D(pool_size=(2, 2))(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
-x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', init='he_normal')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
+x = Convolution2D(512, 3, 3, activation='relu', border_mode='same')(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 x = Flatten(name='flat')(x)
 x = Dense(4096, activation='relu', name='fc')(x)
@@ -102,8 +107,8 @@ history_fc = model.fit_generator(train_generator,
                                  validation_data=validation_generator,
                                  nb_val_samples=val_samples_epoch,
                                  callbacks=[
-                                     ModelCheckpoint('./weights/cnn_maxpool2_fc.{epoch:02d}.hdf5', save_best_only=True,
-                                                     save_weights_only=True),
+                                    # ModelCheckpoint('./weights/cnn_maxpool2_fc.{epoch:02d}.hdf5', save_best_only=True,
+                                     #                save_weights_only=True),
                                      TensorBoard(log_dir='./tf_logs/cnn_maxpool2_fc'),
                                      LearningRateScheduler(learning_rate_scheduler),
                                      EarlyStopping(monitor='loss', patience=5)
@@ -130,9 +135,9 @@ history_full = model.fit_generator(train_generator,
                                    validation_data=validation_generator,
                                    nb_val_samples=val_samples_epoch,
                                    callbacks=[
-                                       ModelCheckpoint('./weights/cnn_maxpool2_full.{epoch:02d}.hdf5',
-                                                       save_best_only=True,
-                                                       save_weights_only=True),
+                                      # ModelCheckpoint('./weights/cnn_maxpool2_full.{epoch:02d}.hdf5',
+                                       #                save_best_only=True,
+                                          #             save_weights_only=True),
                                        TensorBoard(log_dir='./tf_logs/cnn_maxpool2_full'),
                                        LearningRateScheduler(learning_rate_scheduler),
                                        EarlyStopping(monitor='loss', patience=5)
