@@ -35,8 +35,8 @@ base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width
 x = base_model.get_layer('block4_conv3').output
 x = MaxPooling2D(pool_size=(4, 4))(x)
 x = Flatten(name='flat')(x)
-x = Dense(4096, activation='relu', name='fc')(x)
-x = Dense(4096, activation='relu', name='fc2')(x)
+x = Dense(2048, activation='relu', name='fc')(x)
+x = Dense(2048, activation='relu', name='fc2')(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 # Create new model and save it

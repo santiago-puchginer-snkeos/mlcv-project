@@ -6,7 +6,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.applications import VGG16
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, Flatten, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam
@@ -35,7 +34,7 @@ n_iter = 5
 param_grid = {
     'batch_size': range(5, 50, 5),
     'learning_rate': np.logspace(-7, -1, 10 ** 6),
-    'regularizer': np.logspace(-4, 1, 10 ** 5),
+    'regularizer': np.logspace(-4, 0, 10 ** 5),
 }
 optimizers = {
     SGD: {
