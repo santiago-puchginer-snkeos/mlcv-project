@@ -1,59 +1,76 @@
 from __future__ import print_function
 
+import pickle
 import time
+
 import matplotlib.pyplot as plt
-from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam
-from keras.applications import VGG16
-from keras.layers import MaxPooling2D, Dense, Flatten
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Model
-from keras.regularizers import l2
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 import numpy as np
-import mlcv.input_output as io
-from sklearn.model_selection import ParameterSampler
+from keras.applications import VGG16
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.layers import Dense, Flatten, MaxPooling2D
+from keras.models import Model
+from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam
+from keras.preprocessing.image import ImageDataGenerator
+from keras.regularizers import l2
 from scipy.stats.distributions import uniform
+from sklearn.model_selection import ParameterSampler
 
 from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
-val_data_dir = './dataset/MIT_split/test'
+val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
-batch_size = 32
-samples_epoch = 400
+samples_epoch = 2000
 val_samples_epoch = 400
 test_samples = 800
-number_of_epoch_fc = 20
-number_of_epoch_full = 20
-n_iter = 10
+number_of_epoch_fc = 10
+number_of_epoch_full = 10
+regularizer = 0.01
+n_iter = 5
 
 """ HYPERPARAMETERS """
 param_grid = {
-    'batch_size': range(10, 30, 10),
-    'learning_rate': np.logspace(-7, -2, 10^6),
-    'momentum': uniform(),      # Only for SGD
-    'nesterov': [True, False]   # Only for SGD
+    'batch_size': range(5, 50, 5),
+    'learning_rate': np.logspace(-7, -1, 10 ** 6),
+    'regularizer': np.logspace(-4, 1, 10 ** 5),
 }
-optimizers = [Adadelta, Adam, RMSprop, SGD, Adagrad]
-""" SETUP MODEL """
+optimizers = {
+    SGD: {
+        'learning_rate': np.logspace(-7, -4, 10 ** 6),
+        'momentum': uniform(),
+        'nesterov': [True, False]
+    },
+    Adadelta: {
+        'learning_rate': np.logspace(-7, -1, 10 ** 6)
+    },
+    Adam: {
+        'learning_rate': np.logspace(-7, -4, 10 ** 6)
+    },
+    RMSprop: {
+        'learning_rate': np.logspace(-7, -1, 10 ** 6)
+    },
+    Adagrad: {
+        'learning_rate': np.logspace(-4, -1, 10 ** 6)
+    },
+}
+optimizers_names = {
+    SGD: 'SGD',
+    Adadelta: 'Adadelta',
+    Adam: 'Adam',
+    RMSprop: 'RMSprop',
+    Adagrad: 'Adagrad'
+}
+
+""" SETUP BASE MODEL """
 # Get the base pre-trained model
-base_model = VGG16(weights='imagenet')
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
 
-
-# Get output from last convolutional layer in block 4
-x = base_model.get_layer('block4_conv3').output
-x = MaxPooling2D(pool_size=(4, 4))(x)
-x = Flatten(name='flat')(x)
-x = Dense(4096, activation='relu', name='fc',W_regularizer=l2(0.01))(x)
-x = Dense(4096, activation='relu', name='fc2',W_regularizer=l2(0.01))(x)
-x = Dense(8, activation='softmax', name='predictions')(x)
-
-# Create new model and save it
-model = Model(input=base_model.input, output=x)
+# Empty results dictionary
 results_dict = {}
+
 # Data generators
 datagen = ImageDataGenerator(featurewise_center=False,
                              samplewise_center=True,
@@ -70,32 +87,25 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              cval=0.,
                              horizontal_flip=True,
                              vertical_flip=False,
-                             rescale=None)
+                             rescale=None,
+                             preprocessing_function=preprocess_input)
 
+# Create new model from base model
+x = base_model.get_layer('block4_conv3').output
+x = MaxPooling2D(pool_size=(4, 4))(x)
+x = Flatten(name='flat')(x)
+x = Dense(2048, activation='relu', name='fc', W_regularizer=l2(regularizer))(x)
+x = Dense(2048, activation='relu', name='fc2', W_regularizer=l2(regularizer))(x)
+x = Dense(8, activation='softmax', name='predictions')(x)
+model = Model(input=base_model.input, output=x)
 
 """ RANDOMIZED SEARCH CV """
 for optimizer in optimizers:
-    if optimizer == Adam:
-        param_grid = {
-            'batch_size': range(10, 60, 10),
-            'learning_rate': np.logspace(-7, -4, 10 ^ 6),
-            'momentum': uniform(),  # Only for SGD
-            'nesterov': [True, False]  # Only for SGD
-        }
-    elif optimizer == Adagrad:
-        param_grid = {
-            'batch_size': range(10, 60, 10),
-            'learning_rate': np.logspace(-4, -1, 10 ^ 6),
-            'momentum': uniform(),  # Only for SGD
-            'nesterov': [True, False]  # Only for SGD
-        }
-    elif optimizer == SGD:
-        param_grid = {
-            'batch_size': range(10, 60, 10),
-            'learning_rate': np.logspace(-7, -4, 10 ^ 6),
-            'momentum': uniform(),  # Only for SGD
-            'nesterov': [True, False]  # Only for SGD
-        }
+
+    optimizer_name = optimizers_names[optimizer]
+    print('\n{:^80}'.format(optimizer_name.upper()))
+
+    param_grid.update(optimizers[optimizer])
     sampled_params = list(ParameterSampler(param_grid, n_iter=n_iter))
     for ind, params in enumerate(sampled_params):
 
@@ -103,33 +113,39 @@ for optimizer in optimizers:
 
         batch_size = params['batch_size']
         learning_rate = params['learning_rate']
-        momentum = params['momentum']
-        nesterov = params['nesterov']
+        regularizer = params['regularizer']
 
         print('batch size: {}'.format(batch_size))
-        print('optimizer: {}'.format(optimizer))
         print('learning rate: {}'.format(learning_rate))
+        print('regularization term: {}'.format(regularizer))
 
         if optimizer == SGD:
+            momentum = params['momentum']
+            nesterov = params['nesterov']
             print('momentum: {}'.format(momentum))
             print('nesterov momentum: {}'.format('Yes' if nesterov else 'No'))
             optimizer_instance = optimizer(lr=learning_rate, momentum=momentum, nesterov=nesterov)
-            name = '_batchsize_{}_opt_{}_lr_{}_mom_{}_nesterov_{}'.format(batch_size, optimizer, learning_rate, momentum, nesterov)
+            name = 'batchsize_{}_opt_{}_lr_{:.5G}_mom_{:.4G}_nesterov_{}'.format(
+                batch_size,
+                optimizer_name,
+                learning_rate,
+                momentum,
+                str(nesterov).lower()
+            )
         else:
             optimizer_instance = optimizer(lr=learning_rate)
-            name = '_batchsize_{}_opt_{}_lr_{}'.format(batch_size, optimizer, learning_rate)
+            name = 'batchsize_{}_opt_{}_lr_{:.5G}'.format(
+                batch_size,
+                optimizer_name,
+                learning_rate
+            )
 
+        # Create generators
         train_generator = datagen.flow_from_directory(train_data_dir,
                                                       shuffle=True,
                                                       target_size=(img_width, img_height),
                                                       batch_size=batch_size,
                                                       class_mode='categorical')
-
-        test_generator = datagen.flow_from_directory(test_data_dir,
-                                                     shuffle=True,
-                                                     target_size=(img_width, img_height),
-                                                     batch_size=batch_size,
-                                                     class_mode='categorical')
 
         validation_generator = datagen.flow_from_directory(val_data_dir,
                                                            shuffle=True,
@@ -141,7 +157,6 @@ for optimizer in optimizers:
         print('FULLY CONNECTED LAYERS TRAINING')
         print('--------------------------------\n')
         start_time = time.time()
-        # Freeze layers from VGG model, compile it and train
         for layer in base_model.layers:
             layer.trainable = False
         model.compile(loss='categorical_crossentropy', optimizer=optimizer_instance, metrics=['accuracy'])
@@ -149,9 +164,9 @@ for optimizer in optimizers:
                                          samples_per_epoch=samples_epoch,
                                          nb_epoch=number_of_epoch_fc,
                                          validation_data=validation_generator,
-                                         nb_val_samples=val_samples_epoch, callbacks=[
-                                         ModelCheckpoint('./weights/cnn_optimization_fc_'+name+'.{epoch:02d}.hdf5', save_best_only=True,
-                                                         save_weights_only=True)])
+                                         nb_val_samples=val_samples_epoch
+                                         )
+        model.save_weights('./weights/cnn_optimization_fc_{}.hdf5'.format(name))
         print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
         print('\n--------------------------------')
@@ -159,64 +174,68 @@ for optimizer in optimizers:
         print('--------------------------------\n')
         start_time = time.time()
         # Unfreeze original model, recompile it and retrain it
-        for layer in base_model.layers:
+        for layer in model.layers:
             layer.trainable = True
         model.compile(loss='categorical_crossentropy', optimizer=optimizer_instance, metrics=['accuracy'])
         history_full = model.fit_generator(train_generator,
                                            samples_per_epoch=samples_epoch,
                                            nb_epoch=number_of_epoch_full,
                                            validation_data=validation_generator,
-                                           nb_val_samples=val_samples_epoch, callbacks=[
-                                         ModelCheckpoint('./weights/cnn_optimization_full_'+name+'.{epoch:02d}.hdf5', save_best_only=True,
-                                                         save_weights_only=True)])
+                                           nb_val_samples=val_samples_epoch
+                                           )
+
+        model.save_weights('./weights/cnn_optimization_full_{}.hdf5'.format(name))
         print('Total training time: {:.2f} s'.format(time.time() - start_time))
-        #io.save_object(history_fc, 'history_fc_'+name)
-        #io.save_object(history_full, 'history_full_' + name)
+
         print('\n--------------------------------')
         print('EVALUATING PERFORMANCE ON VALIDATION SET')
         print('--------------------------------\n')
         result = model.evaluate_generator(validation_generator, val_samples=val_samples_epoch)
         print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
-        results_dict.update({name: {'accuracy': result[1]*100,
-                                 'loss': result[0]}})
-        #
-        io.save_object(results_dict, 'cnn_optimization', ignore=True)
-        # print('\n--------------------------------')
-        # print('STORING LOSS AND ACCURACY PLOTS')
-        # print('--------------------------------\n')
-        # plt.plot(history_fc.history['acc'])
-        # plt.plot(history_fc.history['val_acc'])
-        # plt.title('Model accuracy (only FC layers training)')
-        # plt.ylabel('Accuracy')
-        # plt.xlabel('Epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig('./results/cnn_optimization_accuracy_fc'+name+'.jpg')
-        # plt.close()
-        #
-        # plt.plot(history_full.history['acc'])
-        # plt.plot(history_full.history['val_acc'])
-        # plt.title('Model accuracy (whole network training)')
-        # plt.ylabel('Accuracy')
-        # plt.xlabel('Epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig('./results/cnn_optimization_accuracy_full'+name+'.jpg')
-        # plt.close()
-        #
-        # plt.plot(history_fc.history['loss'])
-        # plt.plot(history_fc.history['val_loss'])
-        # plt.title('Model loss (only FC layers training)')
-        # plt.ylabel('Loss')
-        # plt.xlabel('Epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig('./results/cnn_optimization_loss_fc'+name+'.jpg')
-        # plt.close()
-        #
-        # plt.plot(history_full.history['loss'])
-        # plt.plot(history_full.history['val_loss'])
-        # plt.title('Model loss (whole network training)')
-        # plt.ylabel('Loss')
-        # plt.xlabel('Epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig('./results/cnn_optimization_loss_full'+name+'.jpg')
-        # plt.close()
-    #
+        results_dict.update({
+            name: {
+                'accuracy': result[1] * 100,
+                'loss': result[0]
+            }
+        })
+        with open('./results/cnn_optimization.pickle', 'wb') as f:
+            pickle.dump(results_dict, f)
+
+        print('\n--------------------------------')
+        print('STORING LOSS AND ACCURACY PLOTS')
+        print('--------------------------------\n')
+        plt.plot(history_fc.history['acc'])
+        plt.plot(history_fc.history['val_acc'])
+        plt.title('Model accuracy (only FC layers training)')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.savefig('./results/cnn_optimization_accuracy_fc' + name + '.jpg')
+        plt.close()
+
+        plt.plot(history_full.history['acc'])
+        plt.plot(history_full.history['val_acc'])
+        plt.title('Model accuracy (whole network training)')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.savefig('./results/cnn_optimization_accuracy_full' + name + '.jpg')
+        plt.close()
+
+        plt.plot(history_fc.history['loss'])
+        plt.plot(history_fc.history['val_loss'])
+        plt.title('Model loss (only FC layers training)')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.savefig('./results/cnn_optimization_loss_fc' + name + '.jpg')
+        plt.close()
+
+        plt.plot(history_full.history['loss'])
+        plt.plot(history_full.history['val_loss'])
+        plt.title('Model loss (whole network training)')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.savefig('./results/cnn_optimization_loss_full' + name + '.jpg')
+        plt.close()

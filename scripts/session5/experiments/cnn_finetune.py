@@ -11,6 +11,8 @@ from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.visualize_util import plot
 
+from mlcv.cnn import preprocess_input
+
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
 val_data_dir = './dataset/MIT_split/test'
@@ -24,18 +26,17 @@ test_samples = 800
 number_of_epoch_fc = 30
 number_of_epoch_full = 30
 lr = 1e-5
-# optimizer = SGD(lr=lr, momentum=0.9, decay=0.0, nesterov=False)
 optimizer = Adam(lr=lr)
 
 # Get the base pre-trained model
-base_model = VGG16(weights='imagenet')
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
 
 # Get output from last convolutional layer in block 4
 x = base_model.get_layer('block4_conv3').output
 x = MaxPooling2D(pool_size=(4, 4))(x)
 x = Flatten(name='flat')(x)
-x = Dense(4096, activation='relu', name='fc')(x)
-x = Dense(4096, activation='relu', name='fc2')(x)
+x = Dense(2048, activation='relu', name='fc')(x)
+x = Dense(2048, activation='relu', name='fc2')(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 # Create new model and save it
@@ -58,7 +59,8 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              cval=0.,
                              horizontal_flip=False,
                              vertical_flip=False,
-                             rescale=None)
+                             rescale=None,
+                             preprocessing_function=preprocess_input)
 
 train_generator = datagen.flow_from_directory(train_data_dir,
                                               shuffle=True,
