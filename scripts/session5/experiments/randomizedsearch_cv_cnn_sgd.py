@@ -8,7 +8,7 @@ import numpy as np
 from keras.applications import VGG16
 from keras.layers import Dense, Flatten, MaxPooling2D
 from keras.models import Model
-from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam
+from keras.optimizers import SGD
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 from scipy.stats.distributions import uniform
@@ -82,7 +82,7 @@ for ind, params in enumerate(sampled_params):
     print('momentum: {}'.format(momentum))
     print('nesterov momentum: {}'.format('Yes' if nesterov else 'No'))
     optimizer = SGD(lr=learning_rate, momentum=momentum, nesterov=nesterov)
-    name = 'batchsize_{}_opt_{}_lr_{:.5G}_mom_{:.4G}_nesterov_{}'.format(
+    name = '_batchsize_{}_opt_{}_lr_{:.5G}_mom_{:.4G}_nesterov_{}'.format(
         batch_size,
         'sgd',
         learning_rate,
@@ -127,7 +127,7 @@ for ind, params in enumerate(sampled_params):
                                      validation_data=validation_generator,
                                      nb_val_samples=val_samples_epoch
                                      )
-    model.save_weights('./weights/cnn_optimization_fc_{}.hdf5'.format(name))
+    model.save_weights('./weights/cnn_optimization_fc{}.hdf5'.format(name))
     print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
     print('\n--------------------------------')
@@ -145,7 +145,7 @@ for ind, params in enumerate(sampled_params):
                                        nb_val_samples=val_samples_epoch
                                        )
 
-    model.save_weights('./weights/cnn_optimization_full_{}.hdf5'.format(name))
+    model.save_weights('./weights/cnn_optimization_full{}.hdf5'.format(name))
     print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
     print('\n--------------------------------')
@@ -170,6 +170,7 @@ for ind, params in enumerate(sampled_params):
     plt.title('Model accuracy (only FC layers training)')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
+    plt.ylim((0, 1))
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig('./results/cnn_optimization_accuracy_fc' + name + '.jpg')
     plt.close()
@@ -179,6 +180,7 @@ for ind, params in enumerate(sampled_params):
     plt.title('Model accuracy (whole network training)')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
+    plt.ylim((0, 1))
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig('./results/cnn_optimization_accuracy_full' + name + '.jpg')
     plt.close()

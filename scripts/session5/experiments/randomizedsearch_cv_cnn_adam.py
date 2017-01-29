@@ -75,7 +75,7 @@ for ind, params in enumerate(sampled_params):
     print('learning rate: {}'.format(learning_rate))
     print('regularization term: {}'.format(regularizer))
     optimizer = Adam(lr=learning_rate)
-    name = 'batchsize_{}_opt_{}_lr_{:.5G}'.format(
+    name = '_batchsize_{}_opt_{}_lr_{:.5G}'.format(
         batch_size,
         'adam',
         learning_rate
@@ -118,7 +118,7 @@ for ind, params in enumerate(sampled_params):
                                      validation_data=validation_generator,
                                      nb_val_samples=val_samples_epoch
                                      )
-    model.save_weights('./weights/cnn_optimization_fc_{}.hdf5'.format(name))
+    model.save_weights('./weights/cnn_optimization_fc{}.hdf5'.format(name))
     print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
     print('\n--------------------------------')
@@ -136,7 +136,7 @@ for ind, params in enumerate(sampled_params):
                                        nb_val_samples=val_samples_epoch
                                        )
 
-    model.save_weights('./weights/cnn_optimization_full_{}.hdf5'.format(name))
+    model.save_weights('./weights/cnn_optimization_full{}.hdf5'.format(name))
     print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
     print('\n--------------------------------')
@@ -161,6 +161,7 @@ for ind, params in enumerate(sampled_params):
     plt.title('Model accuracy (only FC layers training)')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
+    plt.ylim((0, 1))
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig('./results/cnn_optimization_accuracy_fc' + name + '.jpg')
     plt.close()
@@ -170,6 +171,7 @@ for ind, params in enumerate(sampled_params):
     plt.title('Model accuracy (whole network training)')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
+    plt.ylim((0, 1))
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig('./results/cnn_optimization_accuracy_full' + name + '.jpg')
     plt.close()
