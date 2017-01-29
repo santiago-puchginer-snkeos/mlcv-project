@@ -5,11 +5,11 @@ import time
 import matplotlib.pyplot as plt
 from keras.applications.vgg16 import VGG16
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-from keras.layers import Dense, MaxPooling2D, Flatten
+from keras.layers import Dense, MaxPooling2D, Flatten, Dropout
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils.visualize_util import plot
+from keras.regularizers import l2
 
 from mlcv.cnn import preprocess_input
 
@@ -19,14 +19,18 @@ val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
-batch_size = 20
-samples_epoch = 2000
+samples_epoch = 4000
 val_samples_epoch = 400
 test_samples = 800
 number_of_epoch_fc = 30
 number_of_epoch_full = 30
-lr = 1e-5
-optimizer = Adam(lr=lr)
+
+# Hyperparameters
+dropout = 0.5
+regularization = 0.0098
+batch_size = 10
+lr = 1.9155e-5
+optimizer = RMSprop(lr=lr)
 
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
@@ -35,13 +39,14 @@ base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width
 x = base_model.get_layer('block4_conv3').output
 x = MaxPooling2D(pool_size=(4, 4))(x)
 x = Flatten(name='flat')(x)
-x = Dense(2048, activation='relu', name='fc')(x)
-x = Dense(2048, activation='relu', name='fc2')(x)
+x = Dense(2048, activation='relu', name='fc', W_regularizer=l2(regularization))(x)
+x = Dropout(dropout)(x)
+x = Dense(2048, activation='relu', name='fc2', W_regularizer=l2(regularization))(x)
+x = Dropout(dropout)(x)
 x = Dense(8, activation='softmax', name='predictions')(x)
 
 # Create new model and save it
 model = Model(input=base_model.input, output=x)
-plot(model, to_file='./results/cnn_finetune.png', show_shapes=True, show_layer_names=True)
 
 # Data generators
 datagen = ImageDataGenerator(featurewise_center=False,
@@ -49,7 +54,7 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              featurewise_std_normalization=False,
                              samplewise_std_normalization=True,
                              zca_whitening=False,
-                             rotation_range=0,
+                             rotation_range=10,
                              width_shift_range=0.,
                              height_shift_range=0.,
                              shear_range=0.,
@@ -57,11 +62,10 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              channel_shift_range=0.,
                              fill_mode='nearest',
                              cval=0.,
-                             horizontal_flip=False,
+                             horizontal_flip=True,
                              vertical_flip=False,
                              rescale=None,
-                             preprocessing_function=preprocess_input
-                             )
+                             preprocessing_function=preprocess_input)
 
 train_generator = datagen.flow_from_directory(train_data_dir,
                                               shuffle=True,
@@ -91,17 +95,19 @@ for layer in base_model.layers:
 print('\nLAYERS\n')
 for layer in model.layers:
     print('NAME: {}\t TRAINABLE: {}'.format(layer.name, layer.trainable))
+
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+
 history_fc = model.fit_generator(train_generator,
                                  samples_per_epoch=samples_epoch,
                                  nb_epoch=number_of_epoch_fc,
                                  validation_data=validation_generator,
                                  nb_val_samples=val_samples_epoch,
                                  callbacks=[
-                                     ModelCheckpoint('./weights/cnn_finetune_full_dataset_fc.hdf5',
+                                     ModelCheckpoint('./weights/final_system_fc.hdf5',
                                                      save_best_only=True,
                                                      save_weights_only=True),
-                                     TensorBoard(log_dir='./tf_logs/cnn_finetune_full_dataset_fc'),
+                                     TensorBoard(log_dir='./tf_logs/final_system_fc'),
                                      EarlyStopping(monitor='val_loss', patience=5)
                                  ])
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
@@ -124,10 +130,10 @@ history_full = model.fit_generator(train_generator,
                                    validation_data=validation_generator,
                                    nb_val_samples=val_samples_epoch,
                                    callbacks=[
-                                       ModelCheckpoint('./weights/cnn_finetune_full_dataset_full.hdf5',
+                                       ModelCheckpoint('./weights/final_system_full.hdf5',
                                                        save_best_only=True,
                                                        save_weights_only=True),
-                                       TensorBoard(log_dir='./tf_logs/cnn_finetune_full_dataset_full'),
+                                       TensorBoard(log_dir='./tf_logs/final_system_full'),
                                        EarlyStopping(monitor='val_loss', patience=5)
                                    ]
                                    )
@@ -149,7 +155,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_full_dataset_accuracy_fc.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_accuracy.jpg')
 plt.close()
 
 plt.plot(history_full.history['acc'])
@@ -159,7 +165,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_full_dataset_accuracy_full.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_accuracy.jpg')
 plt.close()
 
 plt.plot(history_fc.history['loss'])
@@ -168,7 +174,7 @@ plt.title('Model loss (only FC layers training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_full_dataset_loss_fc.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_loss.jpg')
 plt.close()
 
 plt.plot(history_full.history['loss'])
@@ -177,5 +183,6 @@ plt.title('Model loss (whole network training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_full_dataset_loss_full.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_loss.jpg')
 plt.close()
+

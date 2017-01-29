@@ -16,7 +16,7 @@ from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
-val_data_dir = './dataset/MIT_split/test'
+val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
@@ -102,10 +102,10 @@ history_fc = model.fit_generator(train_generator,
                                  validation_data=validation_generator,
                                  nb_val_samples=val_samples_epoch,
                                  callbacks=[
-                                     ModelCheckpoint('./weights/cnn_finetune_fc_dropout.{epoch:02d}.hdf5',
+                                     ModelCheckpoint('./weights/cnn_finetune_data_augmentation_dropout_fc.hdf5',
                                                      save_best_only=True,
                                                      save_weights_only=True),
-                                     TensorBoard(log_dir='./tf_logs/cnn_finetune_data_augmentation_fc_l2'),
+                                     TensorBoard(log_dir='./tf_logs/cnn_finetune_data_augmentation_dropout_fc'),
                                      EarlyStopping(monitor='val_loss', patience=5)
                                  ])
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
@@ -128,10 +128,10 @@ history_full = model.fit_generator(train_generator,
                                    validation_data=validation_generator,
                                    nb_val_samples=val_samples_epoch,
                                    callbacks=[
-                                       ModelCheckpoint('./weights/cnn_finetune_full_dropout.{epoch:02d}.hdf5',
+                                       ModelCheckpoint('./weights/cnn_finetune_data_augmentation_dropout_full.hdf5',
                                                        save_best_only=True,
                                                        save_weights_only=True),
-                                       TensorBoard(log_dir='./tf_logs/cnn_finetune_data_augmentation_full_l2'),
+                                       TensorBoard(log_dir='./tf_logs/cnn_finetune_data_augmentation_dropout_full'),
                                        EarlyStopping(monitor='val_loss', patience=5)
                                    ]
                                    )
@@ -153,7 +153,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_accuracy_fc_dropout.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_accuracy.jpg')
 plt.close()
 
 plt.plot(history_full.history['acc'])
@@ -163,7 +163,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_accuracy_full_dropout.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_accuracy.jpg')
 plt.close()
 
 plt.plot(history_fc.history['loss'])
@@ -172,7 +172,7 @@ plt.title('Model loss (only FC layers training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_loss_fc_dropout.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_loss.jpg')
 plt.close()
 
 plt.plot(history_full.history['loss'])
@@ -181,5 +181,5 @@ plt.title('Model loss (whole network training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_loss_full_dropout.jpg')
+plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_loss.jpg')
 plt.close()

@@ -15,7 +15,7 @@ from mlcv.cnn import preprocess_input
 
 """ CONSTANTS """
 train_data_dir = './dataset/400_dataset/'
-val_data_dir = './dataset/MIT_split/test'
+val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 224
 img_height = 224
