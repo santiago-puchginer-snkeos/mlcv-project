@@ -7,7 +7,7 @@ from keras.applications.vgg16 import VGG16
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.layers import Dense, MaxPooling2D, Flatten, Dropout
 from keras.models import Model
-from keras.optimizers import RMSprop
+from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 
@@ -22,15 +22,15 @@ img_height = 224
 samples_epoch = 4000
 val_samples_epoch = 400
 test_samples = 800
-number_of_epoch_fc = 30
-number_of_epoch_full = 30
+number_of_epoch_fc = 100
+number_of_epoch_full = 100
 
 # Hyperparameters
 dropout = 0.5
-regularization = 0.0098
-batch_size = 10
-lr = 1.9155e-5
-optimizer = RMSprop(lr=lr)
+regularization = 0.01
+batch_size = 20
+lr = 1e-5
+optimizer = Adam(lr=lr)
 
 # Get the base pre-trained model
 base_model = VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
@@ -155,7 +155,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_accuracy.jpg')
+plt.savefig('./results/final_system_fc_accuracy.jpg')
 plt.close()
 
 plt.plot(history_full.history['acc'])
@@ -165,7 +165,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.ylim((0, 1))
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_accuracy.jpg')
+plt.savefig('./results/final_system_full_accuracy.jpg')
 plt.close()
 
 plt.plot(history_fc.history['loss'])
@@ -174,7 +174,7 @@ plt.title('Model loss (only FC layers training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_droput_fc_loss.jpg')
+plt.savefig('./results/final_system_fc_loss.jpg')
 plt.close()
 
 plt.plot(history_full.history['loss'])
@@ -183,6 +183,6 @@ plt.title('Model loss (whole network training)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('./results/cnn_finetune_data_augmentation_droput_full_loss.jpg')
+plt.savefig('./results/final_system_full_loss.jpg')
 plt.close()
 

@@ -1,16 +1,12 @@
 from __future__ import print_function, division
 
-import time
-
-import matplotlib.pyplot as plt
 from keras.applications.vgg16 import VGG16
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.layers import Dense, MaxPooling2D, Flatten, Dropout
 from keras.models import Model
-from keras.optimizers import RMSprop
+from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
-from sklearn.metrics import confusion_matrix, auc, roc_curve
+from sklearn.metrics import confusion_matrix
 
 import mlcv.plotting as plotting
 import numpy as np
@@ -18,7 +14,7 @@ from mlcv.cnn import preprocess_input
 import mlcv.input_output as io
 
 """ WEIGHTS """
-weigths_file = '/home/master/santi/weights/cnn_finetune_full_dataset/cnn_finetune_full_dataset_full.hdf5'
+weigths_file = '/home/master/santi/weights/final_system_full.hdf5'
 
 """ CONSTANTS """
 test_data_dir = './dataset/MIT_split/test'
@@ -27,10 +23,10 @@ img_height = 224
 
 # Hyperparameters
 dropout = 0.5
-regularization = 0.0098
-batch_size = 10
-lr = 1.9155e-5
-optimizer = RMSprop(lr=lr)
+regularization = 0.01
+batch_size = 20
+lr = 1e-5
+optimizer = Adam(lr=lr)
 
 """ TEST DATASET """
 test_images, test_labels = io.load_test_set()
@@ -60,7 +56,7 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              featurewise_std_normalization=False,
                              samplewise_std_normalization=True,
                              zca_whitening=False,
-                             rotation_range=10,
+                             rotation_range=0,
                              width_shift_range=0.,
                              height_shift_range=0.,
                              shear_range=0.,
@@ -68,7 +64,7 @@ datagen = ImageDataGenerator(featurewise_center=False,
                              channel_shift_range=0.,
                              fill_mode='nearest',
                              cval=0.,
-                             horizontal_flip=True,
+                             horizontal_flip=False,
                              vertical_flip=False,
                              rescale=None,
                              preprocessing_function=preprocess_input)
@@ -87,16 +83,15 @@ result = model.evaluate_generator(test_generator, val_samples=len(test_labels))
 print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 
 print('\n--------------------------------')
-print('COMPUTE CONFUSION MATRIX')
+print('COMPUTING CONFUSION MATRIX')
 print('--------------------------------\n')
 probs = model.predict_generator(test_generator, val_samples=len(test_labels))
 
 classes = ['Opencountry', 'coast', 'forest', 'highway', 'inside_city', 'mountain', 'street', 'tallbuilding']
-print('Prediction output shape: {}, classes {} '.format(probs.shape, classes[1]))
 index_classes = np.argmax(probs, axis=1)
 predicted_class = []
 for i in index_classes:
-
     predicted_class.append(classes[i])
+predicted_class = np.array(predicted_class)
 conf = confusion_matrix(test_labels, predicted_class, labels=classes)
 plotting.plot_confusion_matrix(conf, classes=classes, normalize=True)

@@ -56,8 +56,8 @@ def plot_svm_param(filename, mode='2d', name='default'):
     plt.show()
 
 
-def plot_confusion_matrix(conf_matrix, classes, normalize=False):
-    plt.figure(facecolor='white')
+def plot_confusion_matrix(conf_matrix, classes, normalize=False, dpi=100):
+    plt.figure(facecolor='white', dpi=dpi)
     plt.imshow(conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title('Confusion matrix')
     plt.colorbar()
