@@ -10,13 +10,15 @@ from keras.models import Model
 from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, auc, roc_curve
 
+import mlcv.plotting as plotting
+import numpy as np
 from mlcv.cnn import preprocess_input
 import mlcv.input_output as io
 
 """ WEIGHTS """
-weigths_file = './weights/cnn_finetune_full_dataset/cnn_finetune_full_dataset_full.hdf5'
+weigths_file = '/home/master/santi/weights/cnn_finetune_full_dataset/cnn_finetune_full_dataset_full.hdf5'
 
 """ CONSTANTS """
 test_data_dir = './dataset/MIT_split/test'
@@ -87,7 +89,14 @@ print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 print('\n--------------------------------')
 print('COMPUTE CONFUSION MATRIX')
 print('--------------------------------\n')
-prediction = model.predict_generator(test_generator, val_samples=len(test_labels))
-print('Prediction output shape: {}'.format(prediction.shape))
+probs = model.predict_generator(test_generator, val_samples=len(test_labels))
 
-# TODO Compute confusion matrix and ROC curve
+classes = ['Opencountry', 'coast', 'forest', 'highway', 'inside_city', 'mountain', 'street', 'tallbuilding']
+print('Prediction output shape: {}, classes {} '.format(probs.shape, classes[1]))
+index_classes = np.argmax(probs, axis=1)
+predicted_class = []
+for i in index_classes:
+
+    predicted_class.append(classes[i])
+conf = confusion_matrix(test_labels, predicted_class, labels=classes)
+plotting.plot_confusion_matrix(conf, classes=classes, normalize=True)
