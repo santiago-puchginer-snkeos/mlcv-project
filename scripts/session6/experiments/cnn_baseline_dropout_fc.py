@@ -25,11 +25,11 @@ results_name = os.path.basename(__file__).replace('.py', '')
 
 # Hyperparameters
 regularization = 0.0001
-batch_size = 40
+batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 
 # Create new model and save it
-model = cnn.baseline_cnn(img_width, img_height, regularization=regularization)
+model = cnn.baseline_cnn_dropout_fc(img_width, img_height, regularization=regularization)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 print('\n{:^80}\n'.format('MODEL SUMMARY'))

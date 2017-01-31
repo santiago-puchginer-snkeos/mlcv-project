@@ -1,5 +1,9 @@
 import keras.backend as K
 
+from keras.layers import Dense, MaxPooling2D, Flatten, Input, Convolution2D, BatchNormalization, GaussianNoise, Dropout
+from keras.models import Model
+from keras.regularizers import l2
+
 
 def preprocess_input(x, dim_ordering='default'):
     if dim_ordering == 'default':
@@ -21,3 +25,173 @@ def preprocess_input(x, dim_ordering='default'):
         x[:, :, 1] -= 116.779
         x[:, :, 2] -= 123.68
     return x
+
+
+def baseline_cnn(img_width, img_height, regularization=0.01):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(x)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_batchnorm(img_width, img_height, regularization=0.01):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(x)
+    z = BatchNormalization(name='batchnorm1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = BatchNormalization(name='batchnorm2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = BatchNormalization(name='batchnorm3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_awgn(img_width, img_height, regularization=0.01, sigma=1):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = GaussianNoise(sigma=sigma)(x)
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(z)
+    z = BatchNormalization(name='batchnorm1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = BatchNormalization(name='batchnorm2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = BatchNormalization(name='batchnorm3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_dropout_fc(img_width, img_height, regularization=0.01, dropout=0.5):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(x)
+    z = BatchNormalization(name='batchnorm1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = BatchNormalization(name='batchnorm2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = BatchNormalization(name='batchnorm3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dropout(dropout, name='dropout_fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    z = Dropout(dropout, name='dropout_fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_dropout_conv(img_width, img_height, regularization=0.01, dropout=0.5):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(x)
+    z = BatchNormalization(name='batchnorm1')(z)
+    z = Dropout(dropout, name='dropout_conv1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = BatchNormalization(name='batchnorm2')(z)
+    z = Dropout(dropout, name='dropout_conv2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = BatchNormalization(name='batchnorm3')(z)
+    z = Dropout(dropout, name='dropout_conv3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_dropout(img_width, img_height, regularization=0.01, dropout_conv=0.5, dropout_fc=0.5):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(x)
+    z = BatchNormalization(name='batchnorm1')(z)
+    z = Dropout(dropout_conv, name='dropout_conv1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
+    z = BatchNormalization(name='batchnorm2')(z)
+    z = Dropout(dropout_conv, name='dropout_conv2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = BatchNormalization(name='batchnorm3')(z)
+    z = Dropout(dropout_conv, name='dropout_conv3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dropout(dropout_fc, name='dropout_fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    z = Dropout(dropout_fc, name='dropout_fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model

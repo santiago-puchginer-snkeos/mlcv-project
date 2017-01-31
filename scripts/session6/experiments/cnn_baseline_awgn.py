@@ -29,7 +29,7 @@ batch_size = 40
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 
 # Create new model and save it
-model = cnn.baseline_cnn(img_width, img_height, regularization=regularization)
+model = cnn.baseline_cnn_awgn(img_width, img_height, regularization=regularization, sigma=0.5)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 print('\n{:^80}\n'.format('MODEL SUMMARY'))
