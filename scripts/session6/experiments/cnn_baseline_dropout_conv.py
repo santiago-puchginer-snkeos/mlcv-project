@@ -21,15 +21,18 @@ samples_epoch = 20000
 val_samples_epoch = 800
 test_samples = 800
 number_of_epoch = 150
-results_name = os.path.basename(__file__).replace('.py', '')
 
 # Hyperparameters
 regularization = 0.0001
 batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
+dropout = 0.3
+
+# Results names
+results_name = '{}_dropout_{}'.format(os.path.basename(__file__).replace('.py', ''), dropout)
 
 # Create new model and save it
-model = cnn.baseline_cnn_dropout_conv(img_width, img_height, regularization=regularization, dropout=0.3)
+model = cnn.baseline_cnn_dropout_conv(img_width, img_height, regularization=regularization, dropout=dropout)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 print('\n{:^80}\n'.format('MODEL SUMMARY'))
@@ -90,6 +93,9 @@ print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 print('\n--------------------------------')
 print('STORING LOSS AND ACCURACY PLOTS')
 print('--------------------------------\n')
+
+# Store history
+io.save_object(history.history, results_name, ignore=True)
 
 # Plot
 plt.plot(history.history['acc'])
