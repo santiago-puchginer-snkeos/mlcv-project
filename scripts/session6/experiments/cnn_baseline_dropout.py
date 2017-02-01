@@ -20,19 +20,25 @@ img_height = 128
 samples_epoch = 20000
 val_samples_epoch = 800
 test_samples = 800
-number_of_epoch = 150
+number_of_epoch = 50
 
 # Hyperparameters
 regularization = 0.0001
 batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
-dropout = 0.3
+dropout_fc = 0.5
+dropout_conv = 0.3
 
 # Results names
-results_name = '{}_dropout_{}'.format(os.path.basename(__file__).replace('.py', ''), dropout)
+results_name = '{}_dropoutfc_{}_dropoutconv_{}'.format(
+    os.path.basename(__file__).replace('.py', ''),
+    dropout_fc,
+    dropout_conv
+)
 
 # Create new model and save it
-model = cnn.baseline_cnn_dropout_conv(img_width, img_height, regularization=regularization, dropout=dropout)
+model = cnn.baseline_cnn_dropout(img_width, img_height, regularization=regularization,
+                                 dropout_fc=dropout_fc, dropout_conv=dropout_conv)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 print('\n{:^80}\n'.format('MODEL SUMMARY'))
@@ -80,7 +86,7 @@ history = model.fit_generator(train_generator,
                                                   save_best_only=True,
                                                   save_weights_only=True),
                                   TensorBoard(log_dir='./tf_logs/{}'.format(results_name)),
-                                  EarlyStopping(monitor='val_acc', patience=5),
+                                  EarlyStopping(monitor='val_acc', patience=20),
                               ])
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
 

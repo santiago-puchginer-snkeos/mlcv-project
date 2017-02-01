@@ -1,15 +1,16 @@
 from __future__ import print_function, division
 
-import time
 import os
+import time
+
 import matplotlib.pyplot as plt
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import visualize_util as keras_visualize
 
-import mlcv.input_output as io
 import mlcv.cnn as cnn
+import mlcv.input_output as io
 
 """ CONSTANTS """
 train_data_dir = './dataset/MIT_split/train'
@@ -21,15 +22,22 @@ samples_epoch = 20000
 val_samples_epoch = 800
 test_samples = 800
 number_of_epoch = 150
-results_name = os.path.basename(__file__).replace('.py', '')
 
 # Hyperparameters
 regularization = 0.0001
 batch_size = 40
 optimizer = Adam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
+after_activation = False
+
+# Results name
+results_name = '{}_after_activation_{}'.format(
+    os.path.basename(__file__).replace('.py', ''),
+    str(after_activation).lower()
+)
 
 # Create new model and save it
-model = cnn.baseline_cnn_batchnorm(img_width, img_height, regularization=regularization)
+model = cnn.baseline_cnn_batchnorm(img_width, img_height,
+                                   regularization=regularization, after_activation=after_activation)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 print('\n{:^80}\n'.format('MODEL SUMMARY'))
@@ -77,7 +85,7 @@ history = model.fit_generator(train_generator,
                                                   save_best_only=True,
                                                   save_weights_only=True),
                                   TensorBoard(log_dir='./tf_logs/{}'.format(results_name)),
-                                  EarlyStopping(monitor='val_acc', patience=5),
+                                  EarlyStopping(monitor='val_acc', patience=15),
                               ])
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
@@ -90,6 +98,9 @@ print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 print('\n--------------------------------')
 print('STORING LOSS AND ACCURACY PLOTS')
 print('--------------------------------\n')
+
+# Store history
+io.save_object(history.history, results_name, ignore=True)
 
 # Plot
 plt.plot(history.history['acc'])

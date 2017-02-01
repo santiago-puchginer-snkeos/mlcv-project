@@ -91,6 +91,9 @@ print('\n--------------------------------')
 print('STORING LOSS AND ACCURACY PLOTS')
 print('--------------------------------\n')
 
+# Store history
+io.save_object(history.history, results_name, ignore=True)
+
 # Plot
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
