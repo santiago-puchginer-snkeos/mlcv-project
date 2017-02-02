@@ -37,6 +37,31 @@ def baseline_cnn(img_width, img_height, regularization=0.01):
     z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
                       W_regularizer=l2(regularization),
                       name='conv2')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z),
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv3')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling3')(z)
+    z = Flatten()(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dense(2048, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
+
+def baseline_cnn_awgn_nobatchnorm(img_width, img_height, regularization=0.01, sigma=0.05):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+    z = GaussianNoise(sigma=sigma)(x)
+    z = Convolution2D(32, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv1')(z)
+    z = MaxPooling2D(pool_size=(2, 2), name='maxpooling1')(z)
+    z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization),
+                      name='conv2')(z)
     z = MaxPooling2D(pool_size=(2, 2), name='maxpooling2')(z)
     z = Convolution2D(64, 3, 3, init='he_normal', activation='relu', border_mode='same',
                       W_regularizer=l2(regularization),
