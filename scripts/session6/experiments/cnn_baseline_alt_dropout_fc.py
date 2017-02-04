@@ -23,11 +23,11 @@ test_samples = 800
 number_of_epoch = 150
 
 # Hyperparameters
-regularization = 0.0001
+regularization = 0.1
 batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
-gaussian_noise = True
-dropout = 0.6
+gaussian_noise = False
+dropout = 0.9
 
 # Results names
 results_name = '{}_dropout_{}_awgn_{}'.format(

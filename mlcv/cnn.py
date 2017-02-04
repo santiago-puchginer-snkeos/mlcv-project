@@ -265,18 +265,20 @@ def baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=0.01, drop
     x = Input(shape=(img_width, img_height, 3), name='input')
 
     if gaussian_noise:
-        x = GaussianNoise(sigma=sigma)(x)
+        z = GaussianNoise(sigma=sigma)(x)
+    else:
+        z=x
     z = Convolution2D(32, 5, 5, activation='relu', border_mode='same',
-                      W_regularizer=l2(regularization), name='conv1')(x)
-    z = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='maxpooling1')(z)
+                      W_regularizer=l2(regularization), name='conv1')(z)
+    z = MaxPooling2D(pool_size=(4, 4), strides=(2, 2), name='maxpooling1')(z)
     z = BatchNormalization()(z)
 
     z = Convolution2D(64, 5, 5, init='he_normal', activation='relu', border_mode='same',
                       W_regularizer=l2(regularization), name='conv2')(z)
-    z = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='maxpooling2')(z)
+    z = MaxPooling2D(pool_size=(6, 6), strides=(2, 2), name='maxpooling2')(z)
     z = BatchNormalization()(z)
 
-    z = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='maxpooling3')(z)
+    z = MaxPooling2D(pool_size=(6, 6), strides=(2, 2), name='maxpooling3')(z)
 
     z = Flatten(name='flatten')(z)
     z = Dense(4096, activation='relu', W_regularizer=l2(regularization), name='fc')(z)

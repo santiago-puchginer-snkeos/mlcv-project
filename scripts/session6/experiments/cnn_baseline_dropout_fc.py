@@ -23,7 +23,7 @@ test_samples = 800
 number_of_epoch = 50
 
 # Hyperparameters
-regularization = 0.0001
+regularization = 0.01
 batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 gaussian_noise = False
