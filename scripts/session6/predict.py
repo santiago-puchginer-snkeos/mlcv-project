@@ -15,7 +15,7 @@ import mlcv.input_output as io
 import mlcv.cnn as cnn
 
 """ WEIGHTS """
-weigths_file = '/home/master/anna/weights/cnn_baseline_awgn_nobatchnorm_sigma_0.05.hdf5'
+weigths_file = '/home/master/anna/weights/cnn_baseline_alt_dropout_fc_dropout_0.75_awgn_false.hdf5'
 
 """ CONSTANTS """
 train_data_dir = './dataset/MIT_split/train'
@@ -33,7 +33,8 @@ regularization = 0.0001
 batch_size = 100
 optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 dropout = 0.75
-sigma = 0.05
+gaussian_noise = False
+
 
 """ TEST DATASET """
 test_images, test_labels = io.load_test_set()
@@ -43,7 +44,7 @@ test_images, test_labels = io.load_test_set()
 
 
 # Create new model, load the weigths and compile it
-model = cnn.baseline_cnn_awgn_nobatchnorm(img_width, img_height, regularization=regularization, sigma=sigma)
+model = cnn.baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=regularization, dropout=dropout, gaussian_noise=False)
 model.load_weights(weigths_file)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
