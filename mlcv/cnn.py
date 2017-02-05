@@ -97,6 +97,7 @@ def baseline_cnn_alt_mod(img_width, img_height, regularization=0.1):
 
     return model
 
+
 def baseline_cnn_alt_mod2(img_width, img_height):
     x = Input(shape=(img_width, img_height, 3), name='input')
 
@@ -117,6 +118,7 @@ def baseline_cnn_alt_mod2(img_width, img_height):
     model = Model(input=x, output=y)
 
     return model
+
 
 def baseline_cnn_alt_mod3(img_width, img_height, regularization=0.01):
     x = Input(shape=(img_width, img_height, 3), name='input')
@@ -141,6 +143,7 @@ def baseline_cnn_alt_mod3(img_width, img_height, regularization=0.01):
 
     return model
 
+
 def baseline_cnn_alt_awgn(img_width, img_height, regularization=0.01, sigma=0.05):
     x = Input(shape=(img_width, img_height, 3), name='input')
     z = GaussianNoise(sigma=sigma)(x)
@@ -164,6 +167,7 @@ def baseline_cnn_alt_awgn(img_width, img_height, regularization=0.01, sigma=0.05
     model = Model(input=x, output=y)
 
     return model
+
 
 def baseline_cnn_awgn_nobatchnorm(img_width, img_height, regularization=0.1, sigma=0.05):
     x = Input(shape=(img_width, img_height, 3), name='input')
@@ -261,13 +265,15 @@ def baseline_cnn_awgn(img_width, img_height, regularization=0.1, sigma=0.05):
 
     return model
 
-def baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=0.01, dropout=0.5, gaussian_noise=False, sigma=0.05):
+
+def baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=0.01, dropout=0.5, gaussian_noise=False,
+                                sigma=0.05):
     x = Input(shape=(img_width, img_height, 3), name='input')
 
     if gaussian_noise:
         z = GaussianNoise(sigma=sigma)(x)
     else:
-        z=x
+        z = x
     z = Convolution2D(32, 5, 5, activation='relu', border_mode='same',
                       W_regularizer=l2(regularization), name='conv1')(z)
     z = MaxPooling2D(pool_size=(4, 4), strides=(2, 2), name='maxpooling1')(z)
@@ -288,6 +294,7 @@ def baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=0.01, drop
     model = Model(input=x, output=y)
 
     return model
+
 
 def baseline_cnn_dropout_fc(img_width, img_height, regularization=0.1, dropout=0.5, gaussian_noise=False, sigma=0.05):
     x = Input(shape=(img_width, img_height, 3), name='input')
@@ -323,6 +330,38 @@ def baseline_cnn_dropout_fc(img_width, img_height, regularization=0.1, dropout=0
     model = Model(input=x, output=y)
 
     return model
+
+
+def baseline_cnn_alt_dropout_fc_mod(img_width, img_height, regularization=0.01, dropout=0.5, gaussian_noise=False, sigma=0.05):
+    x = Input(shape=(img_width, img_height, 3), name='input')
+
+    if gaussian_noise:
+        z = GaussianNoise(sigma=sigma)(x)
+    else:
+        z=x
+    z = Convolution2D(32, 5, 5, activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization), name='conv1')(z)
+    z = MaxPooling2D(pool_size=(4, 4), strides=(2, 2), name='maxpooling1')(z)
+    z = BatchNormalization()(z)
+
+    z = Convolution2D(64, 5, 5, activation='relu', border_mode='same',
+                      W_regularizer=l2(regularization), name='conv2')(z)
+    z = MaxPooling2D(pool_size=(4, 4), strides=(2, 2), name='maxpooling2')(z)
+    z = BatchNormalization()(z)
+
+    z = MaxPooling2D(pool_size=(4, 4), strides=(2, 2), name='maxpooling3')(z)
+
+    z = Flatten(name='flatten')(z)
+    z = Dense(512, activation='relu', W_regularizer=l2(regularization), name='fc')(z)
+    z = Dropout(dropout, name='dropout_fc')(z)
+    z = Dense(512, activation='relu', W_regularizer=l2(regularization), name='fc2')(z)
+    z = Dropout(dropout, name='dropout_fc2')(z)
+    y = Dense(8, activation='softmax', name='predictions')(z)
+
+    model = Model(input=x, output=y)
+
+    return model
+
 
 
 def baseline_cnn_dropout_conv(img_width, img_height, regularization=0.1, dropout=0.5):
@@ -394,6 +433,7 @@ def baseline_cnn_dropout(img_width, img_height, regularization=0.1, sigma=0.05, 
     model = Model(input=x, output=y)
 
     return model
+
 
 """ FULLY CONVOLUTIONAL MODELS """
 

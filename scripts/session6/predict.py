@@ -1,18 +1,13 @@
 from __future__ import print_function, division
 
-from keras.applications.vgg16 import VGG16
-from keras.layers import Dense, MaxPooling2D, Flatten, Dropout
-from keras.models import Model
+import numpy as np
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
-from keras.regularizers import l2
 from sklearn.metrics import confusion_matrix
 
-import mlcv.plotting as plotting
-import numpy as np
-from mlcv.cnn import preprocess_input
-import mlcv.input_output as io
 import mlcv.cnn as cnn
+import mlcv.input_output as io
+import mlcv.plotting as plotting
 
 """ WEIGHTS """
 weigths_file = '/home/master/anna/weights/cnn_baseline_alt_dropout_fc_dropout_0.75_awgn_false.hdf5'
@@ -35,7 +30,6 @@ optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 dropout = 0.75
 gaussian_noise = False
 
-
 """ TEST DATASET """
 test_images, test_labels = io.load_test_set()
 
@@ -44,7 +38,8 @@ test_images, test_labels = io.load_test_set()
 
 
 # Create new model, load the weigths and compile it
-model = cnn.baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=regularization, dropout=dropout, gaussian_noise=False)
+model = cnn.baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=regularization, dropout=dropout,
+                                        gaussian_noise=False)
 model.load_weights(weigths_file)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
