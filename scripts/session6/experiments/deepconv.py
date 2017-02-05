@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
+from keras.models import load_model
 from keras.utils import visualize_util as keras_visualize
 
 import mlcv.cnn as cnn
@@ -21,7 +22,7 @@ img_height = 128
 samples_epoch = 10000
 val_samples_epoch = 200
 test_samples = 200
-number_of_epoch = 150
+number_of_epoch = 100
 batch_size = 150
 
 # Optimizer
@@ -31,7 +32,7 @@ optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 regularization = 0.1
 bn_aa = False
 awgn_sigma = 0
-dropout = 0.5
+dropout = 0
 
 results_name = '{}_reg-{}_bnaa-{}_awgn-{}_dropout-{}'.format(
     os.path.basename(__file__).replace('.py', ''),
@@ -101,10 +102,13 @@ history = model.fit_generator(train_generator,
                               callbacks=[
                                   ModelCheckpoint('./weights/{}.hdf5'.format(results_name),
                                                   monitor='val_acc',
+                                                  mode='max',
                                                   save_best_only=True,
-                                                  save_weights_only=True),
+                                                  save_weights_only=False,
+                                                  period=1,
+                                                  verbose=1),
                                   TensorBoard(log_dir='./tf_logs/{}'.format(results_name)),
-                                  EarlyStopping(monitor='val_acc', patience=25),
+                                  EarlyStopping(monitor='val_loss', patience=10),
                               ])
 print('Total training time: {:.2f} s'.format(time.time() - start_time))
 
@@ -117,9 +121,8 @@ print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 print('\n--------------------------------')
 print('EVALUATING PERFORMANCE ON VALIDATION SET (STORED WEIGHTS)')
 print('--------------------------------\n')
-model.load_weights('./weights/{}.hdf5'.format(results_name))
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-result = model.evaluate_generator(validation_generator, val_samples=test_samples)
+new_model = load_model('./weights/{}.hdf5'.format(results_name))
+result = new_model.evaluate_generator(validation_generator, val_samples=test_samples)
 print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 
 
