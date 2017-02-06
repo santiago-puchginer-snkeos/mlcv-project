@@ -4,71 +4,53 @@ import numpy as np
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
+from keras.models import load_model
 
 import mlcv.cnn as cnn
 import mlcv.input_output as io
 import mlcv.plotting as plotting
 
-""" WEIGHTS """
-weigths_file = '/home/master/anna/weights/cnn_baseline_alt_dropout_fc_dropout_0.75_awgn_false.hdf5'
+""" MODEL """
+model_file = '/home/master/santi/weights/compactparams_reg-0.1_awgn-0_dropout-None.hdf5'
 
 """ CONSTANTS """
 train_data_dir = './dataset/MIT_split/train'
-val_data_dir = './dataset/MIT_split/validation'
 test_data_dir = './dataset/MIT_split/test'
 img_width = 128
 img_height = 128
-samples_epoch = 20000
-val_samples_epoch = 800
-test_samples = 800
-number_of_epoch = 50
+test_samples = 807
+batch_size = 150
 
-# Hyperparameters
-regularization = 0.0001
-batch_size = 100
-optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
-dropout = 0.75
-gaussian_noise = False
-
-""" TEST DATASET """
-test_images, test_labels = io.load_test_set()
-
-""" MODEL """
-# Get the base pre-trained model
-
-
-# Create new model, load the weigths and compile it
-model = cnn.baseline_cnn_alt_dropout_fc(img_width, img_height, regularization=regularization, dropout=dropout,
-                                        gaussian_noise=False)
-model.load_weights(weigths_file)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-
-# Test images generator
+""" TEST GENERATOR """
 # Data generators
 datagen = ImageDataGenerator(featurewise_center=True,
                              featurewise_std_normalization=True,
-                             rotation_range=10,
-                             zoom_range=0.2,
-                             horizontal_flip=True,
                              preprocessing_function=cnn.preprocess_input)
 
+train_images, train_labels = io.load_dataset_from_directory(train_data_dir)
+test_images, test_labels = io.load_dataset_from_directory(test_data_dir)
+datagen.fit(train_images)
 test_generator = datagen.flow_from_directory(test_data_dir,
                                              shuffle=False,
                                              target_size=(img_width, img_height),
                                              batch_size=batch_size,
                                              class_mode='categorical')
 
+""" MODEL """
+model = load_model(model_file)
+
+
 """ TEST """
 print('\n--------------------------------')
 print('EVALUATING PERFORMANCE ON TEST SET')
 print('--------------------------------\n')
-result = model.evaluate_generator(test_generator, val_samples=len(test_labels))
+result = model.evaluate_generator(test_generator, val_samples=test_samples)
 print('Loss: {:.2f} \t Accuracy: {:.2f} %'.format(result[0], result[1] * 100))
 
 print('\n--------------------------------')
 print('COMPUTING CONFUSION MATRIX')
 print('--------------------------------\n')
-probs = model.predict_generator(test_generator, val_samples=len(test_labels))
+probs = model.predict_generator(test_generator, val_samples=test_samples)
 
 classes = ['Opencountry', 'coast', 'forest', 'highway', 'inside_city', 'mountain', 'street', 'tallbuilding']
 index_classes = np.argmax(probs, axis=1)

@@ -31,8 +31,8 @@ optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=10 ** (-4))
 # Hyperparameters
 regularization = 0.1
 bn_aa = False
-awgn_sigma = 0
-dropout = 0
+awgn_sigma = 0.05
+dropout = None
 
 results_name = '{}_reg-{}_bnaa-{}_awgn-{}_dropout-{}'.format(
     os.path.basename(__file__).replace('.py', ''),
