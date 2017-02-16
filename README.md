@@ -60,3 +60,11 @@ This project also relies on **OpenCV 2.4.11**. Here you will find OpenCV setup i
 - [Windows](http://docs.opencv.org/3.1.0/d5/de5/tutorial_py_setup_in_windows.html)
 - [macOS](http://www.mobileway.net/2015/02/14/install-opencv-for-python-on-mac-os-x/)
 - [Ubuntu](http://www.pyimagesearch.com/2015/06/22/install-opencv-3-0-and-python-2-7-on-ubuntu/)
+
+On top of that this project uses the [Yael](http://yael.gforge.inria.fr/) library from INRIA.
+The library was used on a Linux machine.
+To install it, just [download it](https://gforge.inria.fr/frs/download.php/file/34217/yael_v438.tar.gz), then gunzip 
+and untar it inside the `libraries` folder, and after that execute the following command on the uncompressed `yael` folder:
+```
+$ ./configure.sh --enable-numpy
+```

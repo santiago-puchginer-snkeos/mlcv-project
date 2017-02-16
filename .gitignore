@@ -16,6 +16,9 @@ dataset/*
 # Ignore folder
 ignore/
 
+# Yael library
+libraries/yael
+
 ######################
 ### PYTHON RELATED ###
 ######################
